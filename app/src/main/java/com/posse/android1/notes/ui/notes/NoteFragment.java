@@ -1,6 +1,7 @@
 package com.posse.android1.notes.ui.notes;
 
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,6 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textview.MaterialTextView;
 import com.posse.android1.notes.R;
 
@@ -16,6 +18,9 @@ public class NoteFragment extends Fragment {
 
     public static final String NOTE_INDEX = "NoteIndex";
     private int mNoteIndex;
+
+    public NoteFragment() {
+    }
 
     public static NoteFragment newInstance(int index) {
         NoteFragment fragment = new NoteFragment();
