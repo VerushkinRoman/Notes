@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="notes_list">
+        <item>Note 1</item>
+        <item>Note 2</item>
+        <item>Note 3</item>
+    </string-array>
+
+    <string-array name="notes">
+        <item>some first note</item>
+        <item>some second note</item>
+        <item>some third note</item>
+    </string-array>
+
+    <string-array name="dates">
+        <item>22.11.1976 15:00</item>
+        <item>11.07.1999 22:15</item>
+        <item>01.01.2005 08:33</item>
+    </string-array>
+</resources>
