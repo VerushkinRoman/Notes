@@ -20,6 +20,7 @@ import com.google.android.material.snackbar.Snackbar;
 public class MainActivity extends AppCompatActivity {
 
     private static final int BACK_BUTTON_EXIT_DELAY = 3000;
+    private static final int BACK_BUTTON_ACCIDENT_DELAY = 800;
     private long mLastTimePressed;
     private AppBarConfiguration mAppBarConfiguration;
 
@@ -34,8 +35,6 @@ public class MainActivity extends AppCompatActivity {
                 .setAction("Action", null).show());
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.nav_view);
-        // Passing each menu ID as a set of Ids because each
-        // menu should be considered as top level destinations.
         mAppBarConfiguration = new AppBarConfiguration.Builder(
                 R.id.nav_notes, R.id.nav_settings)
                 .setDrawerLayout(drawer)
@@ -47,7 +46,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
         MenuItem switchView = menu.findItem(R.id.action_switch_view);
         switchView.setOnMenuItemClickListener(item -> {
@@ -76,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
             Snackbar.make(findViewById(R.id.note_list_container), "Press \"BACK\" again to exit", Snackbar.LENGTH_LONG).show();
             if (System.currentTimeMillis() - mLastTimePressed < BACK_BUTTON_EXIT_DELAY
-                    && System.currentTimeMillis() - mLastTimePressed > 800)
+                    && System.currentTimeMillis() - mLastTimePressed > BACK_BUTTON_ACCIDENT_DELAY)
                if (backStack == 1) {
                    System.exit(0);
                } else super.onBackPressed();

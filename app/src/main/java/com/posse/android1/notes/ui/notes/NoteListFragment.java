@@ -20,7 +20,6 @@ import com.posse.android1.notes.R;
 
 public class NoteListFragment extends Fragment {
 
-    private static final String KEY_HIDDEN = MainNoteFragment.class.getCanonicalName() + "hidden";
     private boolean mIsLandscape;
     private LinearLayout mLinearLayout;
     private int mCurrentNote = -1;
@@ -52,10 +51,6 @@ public class NoteListFragment extends Fragment {
         mIsLandscape = getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
         if (savedInstanceState != null) {
             mCurrentNote = savedInstanceState.getInt(NoteFragment.NOTE_INDEX, -1);
-            int hiddenFragment = savedInstanceState.getInt(KEY_HIDDEN);
-            if (hiddenFragment == View.INVISIBLE) {
-                mLinearLayout.setVisibility(View.INVISIBLE);
-            }
         } else mCurrentNote = 0;
         if (mIsLandscape) {
             showNote(mCurrentNote);
