@@ -1,29 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     style="@style/CardStyle">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_margin="10dp"
+        android:layout_height="wrap_content"
         android:orientation="vertical">
 
         <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/note_heading"
+            android:id="@+id/list_note_header"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAlignment="center"
-            android:textSize="30sp" />
+            android:textSize="40sp"
+            tools:text="List note" />
 
-        <androidx.core.widget.NestedScrollView
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/list_note_date_time"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1">
-
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/note_text"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-        </androidx.core.widget.NestedScrollView>
+            android:layout_height="wrap_content"
+            android:textAlignment="viewStart"
+            android:textSize="12sp"
+            tools:text="List date" />
     </LinearLayout>
+
 </androidx.cardview.widget.CardView>

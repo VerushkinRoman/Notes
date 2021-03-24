@@ -8,6 +8,7 @@ import android.view.MenuItem;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.FragmentManager;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -16,11 +17,13 @@ import androidx.navigation.ui.NavigationUI;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
+import com.posse.android1.notes.ui.notes.NoteListFragment;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final int BACK_BUTTON_EXIT_DELAY = 3000;
     private long mLastTimePressed;
+    private boolean mIsBackShown = false;
     private AppBarConfiguration mAppBarConfiguration;
 
     @Override
@@ -34,8 +37,6 @@ public class MainActivity extends AppCompatActivity {
                 .setAction("Action", null).show());
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.nav_view);
-        // Passing each menu ID as a set of Ids because each
-        // menu should be considered as top level destinations.
         mAppBarConfiguration = new AppBarConfiguration.Builder(
                 R.id.nav_notes, R.id.nav_settings)
                 .setDrawerLayout(drawer)
@@ -47,7 +48,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
         MenuItem switchView = menu.findItem(R.id.action_switch_view);
         switchView.setOnMenuItemClickListener(item -> {
@@ -70,17 +70,31 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        int backStack = (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) ? 1 : 0;
-        if (getSupportFragmentManager().getBackStackEntryCount() > backStack) {
+        boolean isLandscape = getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        if (!isLandscape) {
+            NoteListFragment noteListFragment = (NoteListFragment) fragmentManager.findFragmentByTag("ListOfNotes");
+            if (noteListFragment != null && noteListFragment.isVisible()) {
+                checkExit();
+            } else {
+                super.onBackPressed();
+                mIsBackShown = false;
+            }
+        } else if (fragmentManager.getBackStackEntryCount() > 1) {
             super.onBackPressed();
+            mIsBackShown = false;
         } else {
-            Snackbar.make(findViewById(R.id.note_list_container), "Press \"BACK\" again to exit", Snackbar.LENGTH_LONG).show();
-            if (System.currentTimeMillis() - mLastTimePressed < BACK_BUTTON_EXIT_DELAY
-                    && System.currentTimeMillis() - mLastTimePressed > 800)
-               if (backStack == 1) {
-                   System.exit(0);
-               } else super.onBackPressed();
+            checkExit();
         }
         mLastTimePressed = System.currentTimeMillis();
+    }
+
+    private void checkExit() {
+        Snackbar.make(findViewById(R.id.note_list_container), "Press \"BACK\" again to exit", Snackbar.LENGTH_LONG).show();
+        if (System.currentTimeMillis() - mLastTimePressed < BACK_BUTTON_EXIT_DELAY
+                && System.currentTimeMillis() - mLastTimePressed > 800 && mIsBackShown) {
+            System.exit(0);
+        }
+        mIsBackShown = true;
     }
 }
