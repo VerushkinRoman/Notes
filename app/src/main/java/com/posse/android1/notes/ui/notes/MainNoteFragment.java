@@ -1,7 +1,6 @@
 package com.posse.android1.notes.ui.notes;
 
 import android.os.Bundle;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,7 +11,6 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
-import com.google.android.material.snackbar.Snackbar;
 import com.posse.android1.notes.R;
 
 public class MainNoteFragment extends Fragment {
@@ -28,7 +26,7 @@ public class MainNoteFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         FragmentManager fragmentManager = requireActivity().getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.replace(R.id.note_list_container, new NoteListFragment());
+        fragmentTransaction.replace(R.id.note_list_container, new NoteListFragment(), "ListOfNotes");
         fragmentTransaction.commit();
     }
 }

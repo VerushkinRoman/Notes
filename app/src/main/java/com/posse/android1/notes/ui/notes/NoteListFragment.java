@@ -2,25 +2,22 @@ package com.posse.android1.notes.ui.notes;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.res.ResourcesCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.snackbar.Snackbar;
-import com.google.android.material.textview.MaterialTextView;
+import com.posse.android1.notes.MainActivity;
 import com.posse.android1.notes.R;
 import com.posse.android1.notes.adapter.ViewHolderAdapter;
 import com.posse.android1.notes.note.NoteSourceImpl;
@@ -37,15 +34,21 @@ public class NoteListFragment extends Fragment {
     @Override
     public View onCreateView(@NotNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        mIsLandscape = getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
         RecyclerView recyclerView = (RecyclerView) inflater.inflate(R.layout.fragment_note_list, container, false);
         recyclerView.setHasFixedSize(true);
 
         DividerItemDecoration decorator = new DividerItemDecoration(requireActivity(),
                 LinearLayoutManager.VERTICAL);
-        decorator.setDrawable(Objects.requireNonNull(ResourcesCompat.getDrawable(getResources(), R.drawable.decoration, null)));
+        decorator.setDrawable(Objects.requireNonNull(ContextCompat.getDrawable(requireActivity(), R.drawable.decoration)));
         recyclerView.addItemDecoration(decorator);
 
-        LinearLayoutManager layoutManager = new LinearLayoutManager(requireActivity());
+        RecyclerView.LayoutManager layoutManager;
+        if (MainActivity.isGridView() && !mIsLandscape) {
+            layoutManager = new GridLayoutManager(requireActivity(), 2);
+        } else {
+            layoutManager = new LinearLayoutManager(requireActivity());
+        }
         recyclerView.setLayoutManager(layoutManager);
 
         ViewHolderAdapter viewHolderAdapter = new ViewHolderAdapter(inflater,
@@ -62,7 +65,6 @@ public class NoteListFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        mIsLandscape = getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
         if (savedInstanceState != null) {
             mCurrentNote = savedInstanceState.getInt(NoteFragment.NOTE_INDEX, -1);
         } else mCurrentNote = 0;
@@ -79,16 +81,15 @@ public class NoteListFragment extends Fragment {
     }
 
     private void showNote(int currentNote) {
-        FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+        FragmentManager fragmentManager = requireActivity().getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.addToBackStack(null);
         if (mIsLandscape) {
             fragmentTransaction.replace(R.id.note_container, NoteFragment.newInstance(currentNote));
+            fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
         } else {
             fragmentTransaction.replace(R.id.note_list_container, NoteFragment.newInstance(currentNote));
         }
-        fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
         fragmentTransaction.commit();
-        fragmentManager.executePendingTransactions();
     }
 }

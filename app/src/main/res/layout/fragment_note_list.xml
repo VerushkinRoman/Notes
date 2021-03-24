@@ -8,5 +8,4 @@
     android:layout_margin="10dp"
     android:orientation="vertical"
     app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-    android:tag="ListOfNotes"
     tools:context=".ui.notes.NoteListFragment" />

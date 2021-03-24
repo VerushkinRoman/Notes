@@ -4,9 +4,7 @@ import android.content.res.Resources;
 
 import com.posse.android1.notes.R;
 
-import java.util.Collections;
 import java.util.LinkedList;
-import java.util.List;
 
 public class NoteSourceImpl implements NoteSource {
 
@@ -20,11 +18,6 @@ public class NoteSourceImpl implements NoteSource {
         for (int i = 0; i < names.length; i++) {
             mData.add(new Note(i, names[i], notes[i], creationDates[i]));
         }
-    }
-
-    @Override
-    public List<Note> getNote() {
-        return Collections.unmodifiableList(mData);
     }
 
     @Override
