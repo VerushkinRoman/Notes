@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.posse.android1.notes.MainActivity;
 import com.posse.android1.notes.R;
 import com.posse.android1.notes.adapter.ViewHolderAdapter;
+import com.posse.android1.notes.note.Note;
 import com.posse.android1.notes.note.NoteSourceImpl;
 
 import org.jetbrains.annotations.NotNull;
@@ -37,43 +38,36 @@ public class NoteListFragment extends Fragment implements Parcelable {
             return new NoteListFragment[size];
         }
     };
+
     private boolean mIsLandscape;
-    private int mCurrentNote;
-    private NoteListFragmentListener mListener;
+    private Note mCurrentNote;
+    private NoteSourceImpl mNoteSourceImpl;
 
     public NoteListFragment() {
     }
 
-    public NoteListFragment(NoteListFragmentListener listener, int currentNote) {
-        mListener = listener;
-        mCurrentNote = currentNote;
-    }
-
     protected NoteListFragment(Parcel in) {
         mIsLandscape = in.readByte() != 0;
-        mCurrentNote = in.readInt();
     }
 
     @Override
-    public View onCreateView(@NotNull LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(@NotNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mIsLandscape = getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
         RecyclerView recyclerView = (RecyclerView) inflater.inflate(R.layout.fragment_note_list, container, false);
         recyclerView.setHasFixedSize(true);
 
         RecyclerView.LayoutManager layoutManager;
-        if (MainActivity.isGridView() && !mIsLandscape) {
+        if (((MainActivity) getActivity()).isGridView() && !mIsLandscape) {
             layoutManager = new GridLayoutManager(requireActivity(), 2);
         } else {
             layoutManager = new LinearLayoutManager(requireActivity());
         }
         recyclerView.setLayoutManager(layoutManager);
 
-        ViewHolderAdapter viewHolderAdapter = new ViewHolderAdapter(inflater,
-                new NoteSourceImpl(getResources()));
+        mNoteSourceImpl = new NoteSourceImpl(getResources());
+        ViewHolderAdapter viewHolderAdapter = new ViewHolderAdapter(inflater, mNoteSourceImpl);
         viewHolderAdapter.setOnClickListener((v, position) -> {
-            mCurrentNote = position;
-            mListener.onNoteClick(mCurrentNote);
+            mCurrentNote = mNoteSourceImpl.getItemAt(position);
             showNote(mCurrentNote);
         });
         recyclerView.setAdapter(viewHolderAdapter);
@@ -84,11 +78,12 @@ public class NoteListFragment extends Fragment implements Parcelable {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        if (mCurrentNote < 1) mCurrentNote = 0;
+        int idx = (mCurrentNote == null) ? 0 : mCurrentNote.getNoteIndex();
+        mCurrentNote = mNoteSourceImpl.getItemAt(idx);
         if (mIsLandscape) showNote(mCurrentNote);
     }
 
-    private void showNote(int currentNote) {
+    private void showNote(Note currentNote) {
         FragmentManager fragmentManager = requireActivity().getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.addToBackStack(null);
@@ -110,6 +105,5 @@ public class NoteListFragment extends Fragment implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeByte((byte) (mIsLandscape ? 1 : 0));
-        dest.writeInt(mCurrentNote);
     }
 }

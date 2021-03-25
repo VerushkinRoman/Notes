@@ -13,11 +13,10 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.posse.android1.notes.R;
 
-public class MainNoteFragment extends Fragment implements NoteListFragmentListener {
+public class MainNoteFragment extends Fragment {
 
     private static final String KEY_NOTE_FRAGMENT = MainNoteFragment.class.getCanonicalName() + "mNoteListFragment";
     private NoteListFragment mNoteListFragment;
-    private int mCurrentNoteIndex = -1;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -34,17 +33,13 @@ public class MainNoteFragment extends Fragment implements NoteListFragmentListen
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        FragmentManager fragmentManager = requireActivity().getSupportFragmentManager();
         if (savedInstanceState != null) {
             mNoteListFragment = savedInstanceState.getParcelable(KEY_NOTE_FRAGMENT);
-        } else mNoteListFragment = new NoteListFragment(this, mCurrentNoteIndex);
-        FragmentManager fragmentManager = requireActivity().getSupportFragmentManager();
+            fragmentManager.popBackStack();
+        } else mNoteListFragment = new NoteListFragment();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.note_list_container, mNoteListFragment, "ListOfNotes");
         fragmentTransaction.commit();
-    }
-
-    @Override
-    public void onNoteClick(int index) {
-        mCurrentNoteIndex = index;
     }
 }

@@ -3,9 +3,11 @@
     <string-array name="notes_list">
         <item>Note 1</item>
         <item>Note 2</item>
-        <item>Note 3</item>
+        <item>Very long header text</item>
         <item>Note 4</item>
-        <item>Note 5</item>
+        <item>Android officialy supports autosizing. For implementing dynamic size you should set
+            autoSizeTextType attribute to uniform and set autoSizeMaxTextSize and
+            autoSizeMinTextSize attributes to your desired size</item>
         <item>Note 6</item>
         <item>Note 7</item>
         <item>Note 8</item>
@@ -17,10 +19,14 @@
 
     <string-array name="notes">
         <item>some first note</item>
-        <item>some second note</item>
+        <item>I am working with fragment architecture i designed login page in a fragment,
+            i want to remove the only login fragment from back stack after user login successful
+            and open another fragment, please help me</item>
         <item>some third note</item>
         <item>some first note</item>
-        <item>some second note</item>
+        <item>Is theres way to change the text size to fit screen-width ?
+            i have Header with long title, the problem is on small size screen that title goes
+            to another line. i would like to change font size to fit the whole text in 1 line</item>
         <item>some third note</item>
         <item>some first note</item>
         <item>some second note</item>

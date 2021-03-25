@@ -30,21 +30,17 @@ public class MainActivity extends AppCompatActivity {
     private static final int BACK_BUTTON_EXIT_DELAY = 3000;
     private static final int BACK_BUTTON_ACCIDENT_DELAY = 500;
     private static final String KEY_VIEW = MainActivity.class.getCanonicalName() + "mIsGridView";
-    private static boolean sIsGridView = false;
+    private boolean mIsGridView = false;
     private long mLastTimePressed;
     private boolean mIsBackShown = false;
     private AppBarConfiguration mAppBarConfiguration;
     private MenuItem mSwitchView;
     private boolean mIsLandscape;
 
-    public static boolean isGridView() {
-        return sIsGridView;
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (savedInstanceState != null) sIsGridView = savedInstanceState.getBoolean(KEY_VIEW);
+        if (savedInstanceState != null) mIsGridView = savedInstanceState.getBoolean(KEY_VIEW);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -75,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
         mSwitchView.setOnMenuItemClickListener(item -> {
             Drawable icon = mSwitchView.getIcon().getConstantState().equals(lineView.getConstantState()) ? gridView : lineView;
             mSwitchView.setIcon(icon);
-            sIsGridView = icon.equals(gridView);
+            mIsGridView = icon.equals(gridView);
             refreshFragment();
             return false;
         });
@@ -102,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onSaveInstanceState(@NotNull Bundle bundle) {
         super.onSaveInstanceState(bundle);
-        bundle.putBoolean(KEY_VIEW, sIsGridView);
+        bundle.putBoolean(KEY_VIEW, mIsGridView);
     }
 
     @Override
@@ -138,5 +134,9 @@ public class MainActivity extends AppCompatActivity {
 
     public MenuItem getSwitchView() {
         return mSwitchView;
+    }
+
+    public boolean isGridView() {
+        return mIsGridView;
     }
 }
