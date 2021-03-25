@@ -11,9 +11,9 @@ import com.posse.android1.notes.note.Note;
 
 class ViewHolder extends RecyclerView.ViewHolder {
 
-    public final MaterialTextView header;
-    public final MaterialTextView timestamp;
-    public int id;
+    private final MaterialTextView header;
+    private final MaterialTextView timestamp;
+    private int id;
 
     public ViewHolder(@NonNull View itemView) {
         super(itemView);
@@ -22,8 +22,8 @@ class ViewHolder extends RecyclerView.ViewHolder {
     }
 
     public void fillCard(Note note) {
-        id = note.mNoteIndex;
-        header.setText(note.mName);
-        timestamp.setText(note.mCreationDate);
+        id = note.getNoteIndex();
+        header.setText(note.getName());
+        timestamp.setText(note.getCreationDate());
     }
 }

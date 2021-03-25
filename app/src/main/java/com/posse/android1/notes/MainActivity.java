@@ -25,28 +25,26 @@ import com.posse.android1.notes.ui.notes.NoteListFragment;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Objects;
-
 public class MainActivity extends AppCompatActivity {
 
     private static final int BACK_BUTTON_EXIT_DELAY = 3000;
     private static final int BACK_BUTTON_ACCIDENT_DELAY = 500;
     private static final String KEY_VIEW = MainActivity.class.getCanonicalName() + "mIsGridView";
-    private static boolean mIsGridView = false;
+    private static boolean sIsGridView = false;
     private long mLastTimePressed;
     private boolean mIsBackShown = false;
     private AppBarConfiguration mAppBarConfiguration;
+    private MenuItem mSwitchView;
+    private boolean mIsLandscape;
 
     public static boolean isGridView() {
-        return mIsGridView;
+        return sIsGridView;
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (savedInstanceState != null) {
-            mIsGridView = savedInstanceState.getBoolean(KEY_VIEW);
-        }
+        if (savedInstanceState != null) sIsGridView = savedInstanceState.getBoolean(KEY_VIEW);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -62,32 +60,22 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
+        mIsLandscape = getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
-        MenuItem switchView = menu.findItem(R.id.action_switch_view);
-        Drawable menuIcon;
-        if (mIsGridView) {
-            menuIcon = ContextCompat.getDrawable(this, android.R.drawable.ic_dialog_dialer);
-        } else {
-            menuIcon = ContextCompat.getDrawable(this, android.R.drawable.ic_menu_sort_by_size);
-        }
-        switchView.setIcon(menuIcon);
-        switchView.setOnMenuItemClickListener(item -> {
-            Drawable icon;
-            if (switchView.getIcon().getConstantState()
-                    .equals(Objects.requireNonNull(ContextCompat.getDrawable
-                            (this, android.R.drawable.ic_menu_sort_by_size))
-                            .getConstantState())) {
-                icon = ContextCompat.getDrawable(this, android.R.drawable.ic_dialog_dialer);
-                mIsGridView = true;
-            } else {
-                icon = ContextCompat.getDrawable(this, android.R.drawable.ic_menu_sort_by_size);
-                mIsGridView = false;
-            }
-            switchView.setIcon(icon);
+        mSwitchView = menu.findItem(R.id.action_switch_view);
+        if (mIsLandscape) mSwitchView.setVisible(false);
+        Drawable gridView = ContextCompat.getDrawable(this, android.R.drawable.ic_dialog_dialer);
+        Drawable lineView = ContextCompat.getDrawable(this, android.R.drawable.ic_menu_sort_by_size);
+        Drawable menuIcon = isGridView() ? gridView : lineView;
+        mSwitchView.setIcon(menuIcon);
+        mSwitchView.setOnMenuItemClickListener(item -> {
+            Drawable icon = mSwitchView.getIcon().getConstantState().equals(lineView.getConstantState()) ? gridView : lineView;
+            mSwitchView.setIcon(icon);
+            sIsGridView = icon.equals(gridView);
             refreshFragment();
             return false;
         });
@@ -114,15 +102,15 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onSaveInstanceState(@NotNull Bundle bundle) {
         super.onSaveInstanceState(bundle);
-        bundle.putBoolean(KEY_VIEW, mIsGridView);
+        bundle.putBoolean(KEY_VIEW, sIsGridView);
     }
 
     @Override
     public void onBackPressed() {
-        boolean isLandscape = getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
         FragmentManager fragmentManager = getSupportFragmentManager();
-        if (!isLandscape) {
+        if (!mIsLandscape) {
             NoteListFragment noteListFragment = (NoteListFragment) fragmentManager.findFragmentByTag("ListOfNotes");
+            mSwitchView.setVisible(true);
             if (noteListFragment != null && noteListFragment.isVisible()) {
                 checkExit();
             } else {
@@ -146,5 +134,9 @@ public class MainActivity extends AppCompatActivity {
             System.exit(0);
         }
         mIsBackShown = true;
+    }
+
+    public MenuItem getSwitchView() {
+        return mSwitchView;
     }
 }

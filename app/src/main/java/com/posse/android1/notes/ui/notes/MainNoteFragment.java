@@ -13,7 +13,11 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.posse.android1.notes.R;
 
-public class MainNoteFragment extends Fragment {
+public class MainNoteFragment extends Fragment implements NoteListFragmentListener {
+
+    private static final String KEY_NOTE_FRAGMENT = MainNoteFragment.class.getCanonicalName() + "mNoteListFragment";
+    private NoteListFragment mNoteListFragment;
+    private int mCurrentNoteIndex = -1;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -22,11 +26,25 @@ public class MainNoteFragment extends Fragment {
     }
 
     @Override
+    public void onSaveInstanceState(@NonNull Bundle bundle) {
+        super.onSaveInstanceState(bundle);
+        bundle.putParcelable(KEY_NOTE_FRAGMENT, mNoteListFragment);
+    }
+
+    @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        if (savedInstanceState != null) {
+            mNoteListFragment = savedInstanceState.getParcelable(KEY_NOTE_FRAGMENT);
+        } else mNoteListFragment = new NoteListFragment(this, mCurrentNoteIndex);
         FragmentManager fragmentManager = requireActivity().getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.replace(R.id.note_list_container, new NoteListFragment(), "ListOfNotes");
+        fragmentTransaction.replace(R.id.note_list_container, mNoteListFragment, "ListOfNotes");
         fragmentTransaction.commit();
+    }
+
+    @Override
+    public void onNoteClick(int index) {
+        mCurrentNoteIndex = index;
     }
 }
