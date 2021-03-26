@@ -4,7 +4,10 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -17,11 +20,16 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.posse.android1.notes.DateFormatter;
 import com.posse.android1.notes.MainActivity;
+import com.posse.android1.notes.PreferencesDataWorker;
 import com.posse.android1.notes.R;
 import com.posse.android1.notes.adapter.ViewHolderAdapter;
 import com.posse.android1.notes.note.Note;
+import com.posse.android1.notes.note.NoteSource;
 import com.posse.android1.notes.note.NoteSourceImpl;
+import com.posse.android1.notes.ui.editor.EditorFragment;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -41,7 +49,10 @@ public class NoteListFragment extends Fragment implements Parcelable {
 
     private boolean mIsLandscape;
     private Note mCurrentNote;
-    private NoteSourceImpl mNoteSourceImpl;
+    private NoteSource mNoteSource;
+    private ViewHolderAdapter mViewHolderAdapter;
+    private int mLastSelectedPosition = -1;
+    private PreferencesDataWorker mPrefsData;
 
     public NoteListFragment() {
     }
@@ -53,24 +64,36 @@ public class NoteListFragment extends Fragment implements Parcelable {
     @Override
     public View onCreateView(@NotNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mIsLandscape = getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
+        mPrefsData = new PreferencesDataWorker(requireActivity());
         RecyclerView recyclerView = (RecyclerView) inflater.inflate(R.layout.fragment_note_list, container, false);
         recyclerView.setHasFixedSize(true);
 
+        FloatingActionButton fab = requireActivity().findViewById(R.id.fab);
+        fab.setOnClickListener(v -> {
+            mNoteSource.add(new Note(mNoteSource.getItemsCount(), "New note", "", DateFormatter.getCurrentDate()));
+            replaceFragments(EditorFragment.newInstance(mNoteSource.getItemsCount() - 1));
+            int position = mNoteSource.getItemsCount() - 1;
+            mViewHolderAdapter.notifyItemInserted(position);
+            mPrefsData.writeNote(mNoteSource.getItemAt(position));
+            mPrefsData.writeNotesQuantity(mNoteSource.getItemsCount());
+            recyclerView.scrollToPosition(position);
+        });
+
         RecyclerView.LayoutManager layoutManager;
-        if (((MainActivity) getActivity()).isGridView() && !mIsLandscape) {
+        if (((MainActivity) requireActivity()).isGridView() && !mIsLandscape) {
             layoutManager = new GridLayoutManager(requireActivity(), 2);
         } else {
             layoutManager = new LinearLayoutManager(requireActivity());
         }
         recyclerView.setLayoutManager(layoutManager);
 
-        mNoteSourceImpl = new NoteSourceImpl(getResources());
-        ViewHolderAdapter viewHolderAdapter = new ViewHolderAdapter(inflater, mNoteSourceImpl);
-        viewHolderAdapter.setOnClickListener((v, position) -> {
-            mCurrentNote = mNoteSourceImpl.getItemAt(position);
+        mNoteSource = NoteSourceImpl.getInstance(requireActivity());
+        mViewHolderAdapter = new ViewHolderAdapter(this, mNoteSource);
+        mViewHolderAdapter.setOnClickListener((v, position) -> {
+            mCurrentNote = mNoteSource.getItemAt(position);
             showNote(mCurrentNote);
         });
-        recyclerView.setAdapter(viewHolderAdapter);
+        recyclerView.setAdapter(mViewHolderAdapter);
 
         return recyclerView;
     }
@@ -78,23 +101,61 @@ public class NoteListFragment extends Fragment implements Parcelable {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        int idx = (mCurrentNote == null) ? 0 : mCurrentNote.getNoteIndex();
-        mCurrentNote = mNoteSourceImpl.getItemAt(idx);
-        if (mIsLandscape) showNote(mCurrentNote);
+        if (mCurrentNote != null) {
+            if (mIsLandscape) showNote(mCurrentNote);
+        }
     }
 
     private void showNote(Note currentNote) {
-        FragmentManager fragmentManager = requireActivity().getSupportFragmentManager();
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.addToBackStack(null);
-        if (mIsLandscape) {
-            fragmentTransaction.replace(R.id.note_container, NoteFragment.newInstance(currentNote));
-            fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
+        replaceFragments(NoteFragment.newInstance(currentNote));
+    }
+
+    @Override
+    public void onCreateContextMenu(@NonNull ContextMenu menu, @NonNull View v,
+                                    @Nullable ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        MenuInflater menuInflater = requireActivity().getMenuInflater();
+        menuInflater.inflate(R.menu.note_list_menu, menu);
+    }
+
+    @Override
+    public boolean onContextItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.note_list_item_menu_edit) {
+            if (mLastSelectedPosition != -1) {
+                replaceFragments(EditorFragment.newInstance(mLastSelectedPosition));
+            }
+        } else if (item.getItemId() == R.id.note_list_item_menu_delete) {
+            if (mLastSelectedPosition != -1) {
+                mNoteSource.remove(mLastSelectedPosition);
+                mViewHolderAdapter.notifyItemRemoved(mLastSelectedPosition);
+                mPrefsData.deleteNote(mLastSelectedPosition);
+                mPrefsData.writeNotesQuantity(mNoteSource.getItemsCount());
+            }
         } else {
-            fragmentTransaction.replace(R.id.note_list_container, NoteFragment.newInstance(currentNote));
-            ((MainActivity) getActivity()).getSwitchView().setVisible(false);
+            return super.onContextItemSelected(item);
         }
-        fragmentTransaction.commit();
+        return true;
+    }
+
+    private void replaceFragments(Fragment newFragment) {
+        ((MainActivity) requireActivity()).showSwitchView(false);
+        FragmentManager fragmentManager = requireActivity().getSupportFragmentManager();
+        FragmentTransaction transaction = fragmentManager.beginTransaction();
+        transaction.addToBackStack(null);
+        if (mIsLandscape) {
+            transaction.replace(R.id.note_container, newFragment);
+            transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
+            if (newFragment instanceof EditorFragment)
+                ((MainActivity) requireActivity()).showFloatingButton(false);
+        } else {
+            transaction.replace(R.id.note_list_container, newFragment);
+            ((MainActivity) requireActivity()).showFloatingButton(false);
+        }
+        transaction.commit();
+    }
+
+    public void setLastSelectedPosition(int lastSelectedPosition) {
+        mLastSelectedPosition = lastSelectedPosition;
     }
 
     @Override

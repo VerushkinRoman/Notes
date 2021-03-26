@@ -5,6 +5,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -20,10 +21,11 @@ import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
-import com.google.android.material.snackbar.Snackbar;
 import com.posse.android1.notes.ui.notes.NoteListFragment;
 
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -44,9 +46,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(view -> Snackbar.make(view, "Add a new note Action", Snackbar.LENGTH_LONG)
-                .setAction("Action", null).show());
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.nav_view);
         mAppBarConfiguration = new AppBarConfiguration.Builder(
@@ -63,9 +62,9 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
         mSwitchView = menu.findItem(R.id.action_switch_view);
-        if (mIsLandscape) mSwitchView.setVisible(false);
-        Drawable gridView = ContextCompat.getDrawable(this, android.R.drawable.ic_dialog_dialer);
-        Drawable lineView = ContextCompat.getDrawable(this, android.R.drawable.ic_menu_sort_by_size);
+        if (mIsLandscape) showSwitchView(false);
+        Drawable gridView = Objects.requireNonNull(ContextCompat.getDrawable(this, android.R.drawable.ic_dialog_dialer));
+        Drawable lineView = Objects.requireNonNull(ContextCompat.getDrawable(this, android.R.drawable.ic_menu_sort_by_size));
         Drawable menuIcon = isGridView() ? gridView : lineView;
         mSwitchView.setIcon(menuIcon);
         mSwitchView.setOnMenuItemClickListener(item -> {
@@ -105,8 +104,9 @@ public class MainActivity extends AppCompatActivity {
     public void onBackPressed() {
         FragmentManager fragmentManager = getSupportFragmentManager();
         if (!mIsLandscape) {
+            showFloatingButton(true);
+            showSwitchView(true);
             NoteListFragment noteListFragment = (NoteListFragment) fragmentManager.findFragmentByTag("ListOfNotes");
-            mSwitchView.setVisible(true);
             if (noteListFragment != null && noteListFragment.isVisible()) {
                 checkExit();
             } else {
@@ -116,6 +116,7 @@ public class MainActivity extends AppCompatActivity {
         } else if (fragmentManager.getBackStackEntryCount() > 1) {
             super.onBackPressed();
             mIsBackShown = false;
+            showFloatingButton(true);
         } else {
             checkExit();
         }
@@ -123,7 +124,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void checkExit() {
-        Snackbar.make(findViewById(R.id.note_list_container), "Press \"BACK\" again to exit", Snackbar.LENGTH_LONG).show();
+        Toast.makeText(this, "Press \"BACK\" again to exit", Toast.LENGTH_SHORT).show();
         if (System.currentTimeMillis() - mLastTimePressed < BACK_BUTTON_EXIT_DELAY
                 && System.currentTimeMillis() - mLastTimePressed > BACK_BUTTON_ACCIDENT_DELAY
                 && mIsBackShown) {
@@ -132,8 +133,14 @@ public class MainActivity extends AppCompatActivity {
         mIsBackShown = true;
     }
 
-    public MenuItem getSwitchView() {
-        return mSwitchView;
+    public void showFloatingButton(boolean isVisible) {
+        FloatingActionButton fab = findViewById(R.id.fab);
+        if (isVisible) fab.show();
+        else fab.hide();
+    }
+
+    public void showSwitchView(boolean isVisible) {
+        if (mSwitchView != null) mSwitchView.setVisible(isVisible);
     }
 
     public boolean isGridView() {
