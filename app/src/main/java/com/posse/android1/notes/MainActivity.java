@@ -21,7 +21,6 @@ import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
-import com.posse.android1.notes.ui.notes.NoteListFragment;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -36,7 +35,9 @@ public class MainActivity extends AppCompatActivity {
     private long mLastTimePressed;
     private boolean mIsBackShown = false;
     private AppBarConfiguration mAppBarConfiguration;
+    private MenuItem.OnMenuItemClickListener mEditClickListener;
     private MenuItem mSwitchView;
+    private MenuItem mEditBar;
     private boolean mIsLandscape;
 
     @Override
@@ -62,7 +63,10 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
         mSwitchView = menu.findItem(R.id.action_switch_view);
-        if (mIsLandscape) showSwitchView(false);
+        mEditBar = menu.findItem(R.id.edit_bar);
+        if (mIsLandscape) {
+            showSwitchView(false);
+        } else showEditBar(false);
         Drawable gridView = Objects.requireNonNull(ContextCompat.getDrawable(this, android.R.drawable.ic_dialog_dialer));
         Drawable lineView = Objects.requireNonNull(ContextCompat.getDrawable(this, android.R.drawable.ic_menu_sort_by_size));
         Drawable menuIcon = isGridView() ? gridView : lineView;
@@ -74,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
             refreshFragment();
             return false;
         });
+        mEditBar.setOnMenuItemClickListener(mEditClickListener);
         return true;
     }
 
@@ -105,8 +110,13 @@ public class MainActivity extends AppCompatActivity {
         FragmentManager fragmentManager = getSupportFragmentManager();
         if (!mIsLandscape) {
             showFloatingButton(true);
-            showSwitchView(true);
-            NoteListFragment noteListFragment = (NoteListFragment) fragmentManager.findFragmentByTag("ListOfNotes");
+            showEditBar(false);
+            Fragment editorFragment = fragmentManager.findFragmentByTag("Editor");
+            if (editorFragment != null && editorFragment.isVisible()) {
+                showEditBar(true);
+                showFloatingButton(false);
+            } else showSwitchView(true);
+            Fragment noteListFragment = fragmentManager.findFragmentByTag("ListOfNotes");
             if (noteListFragment != null && noteListFragment.isVisible()) {
                 checkExit();
             } else {
@@ -116,6 +126,7 @@ public class MainActivity extends AppCompatActivity {
         } else if (fragmentManager.getBackStackEntryCount() > 1) {
             super.onBackPressed();
             mIsBackShown = false;
+            showEditBar(true);
             showFloatingButton(true);
         } else {
             checkExit();
@@ -133,14 +144,24 @@ public class MainActivity extends AppCompatActivity {
         mIsBackShown = true;
     }
 
+    public void setMenuEditClickListener(MenuItem.OnMenuItemClickListener listener) {
+        mEditClickListener = listener;
+    }
+
     public void showFloatingButton(boolean isVisible) {
         FloatingActionButton fab = findViewById(R.id.fab);
-        if (isVisible) fab.show();
-        else fab.hide();
+        if (fab != null) {
+            if (isVisible) fab.show();
+            else fab.hide();
+        }
     }
 
     public void showSwitchView(boolean isVisible) {
         if (mSwitchView != null) mSwitchView.setVisible(isVisible);
+    }
+
+    public void showEditBar(boolean isVisible) {
+        if (mEditBar != null) mEditBar.setVisible(isVisible);
     }
 
     public boolean isGridView() {

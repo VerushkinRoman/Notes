@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 
 import androidx.fragment.app.Fragment;
 
@@ -18,6 +19,8 @@ import com.posse.android1.notes.note.NoteSource;
 import com.posse.android1.notes.note.NoteSourceImpl;
 
 import java.util.Objects;
+
+import static android.content.Context.INPUT_METHOD_SERVICE;
 
 public class EditorFragment extends Fragment {
     private static final String KEY_NOTE_INDEX = "currentNoteIndex";
@@ -56,14 +59,29 @@ public class EditorFragment extends Fragment {
         editNoteBody.setText(note.getDescription());
         MaterialButton btnSave = view.findViewById(R.id.btn_save);
         btnSave.setOnClickListener((v) -> {
-            note.setName(Objects.requireNonNull(editNoteHeader.getText()).toString());
-            note.setDescription(Objects.requireNonNull(editNoteBody.getText()).toString());
-            note.setCreationDate(DateFormatter.getCurrentDate());
-            PreferencesDataWorker prefsData = new PreferencesDataWorker(requireActivity());
-            prefsData.writeNote(note);
+            saveNote(note, editNoteHeader, editNoteBody);
+            hideKeyboard();
             ((MainActivity) requireActivity()).showFloatingButton(true);
+            ((MainActivity) requireActivity()).showSwitchView(true);
+            ((MainActivity) requireActivity()).showEditBar(false);
             requireActivity().getSupportFragmentManager().popBackStack();
         });
         return view;
+    }
+
+    private void saveNote(Note note, TextInputEditText editNoteHeader, TextInputEditText editNoteBody) {
+        note.setName(Objects.requireNonNull(editNoteHeader.getText()).toString());
+        note.setDescription(Objects.requireNonNull(editNoteBody.getText()).toString());
+        note.setCreationDate(DateFormatter.getCurrentDate());
+        PreferencesDataWorker prefsData = new PreferencesDataWorker(requireActivity());
+        prefsData.writeNote(note);
+    }
+
+    private void hideKeyboard() {
+        try {
+            InputMethodManager imm = (InputMethodManager) requireActivity().getSystemService(INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(requireActivity().getCurrentFocus().getWindowToken(), 0);
+        } catch (Exception ignored) {
+        }
     }
 }

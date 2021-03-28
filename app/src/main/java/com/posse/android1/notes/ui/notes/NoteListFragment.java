@@ -70,7 +70,7 @@ public class NoteListFragment extends Fragment implements Parcelable {
 
         FloatingActionButton fab = requireActivity().findViewById(R.id.fab);
         fab.setOnClickListener(v -> {
-            mNoteSource.add(new Note(mNoteSource.getItemsCount(), "New note", "", DateFormatter.getCurrentDate()));
+            mNoteSource.add(new Note(mNoteSource.getItemsCount(), getString(R.string.new_note_caption), "", DateFormatter.getCurrentDate()));
             replaceFragments(EditorFragment.newInstance(mNoteSource.getItemsCount() - 1));
             int position = mNoteSource.getItemsCount() - 1;
             mViewHolderAdapter.notifyItemInserted(position);
@@ -101,12 +101,25 @@ public class NoteListFragment extends Fragment implements Parcelable {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        if (mCurrentNote != null) {
-            if (mIsLandscape) showNote(mCurrentNote);
+        if (mCurrentNote == null) {
+            try {
+                mCurrentNote = mNoteSource.getItemAt(0);
+            } catch (IndexOutOfBoundsException ignored) {
+                return;
+            }
+        }
+        ((MainActivity) requireActivity()).setMenuEditClickListener((MenuItem.OnMenuItemClickListener) item -> {
+            ((MainActivity) requireActivity()).showEditBar(false);
+            replaceFragments(EditorFragment.newInstance(mCurrentNote.getNoteIndex()));
+            return false;
+        });
+        if (mIsLandscape) {
+            showNote(mCurrentNote);
         }
     }
 
     private void showNote(Note currentNote) {
+        ((MainActivity) requireActivity()).showEditBar(true);
         replaceFragments(NoteFragment.newInstance(currentNote));
     }
 
@@ -122,13 +135,14 @@ public class NoteListFragment extends Fragment implements Parcelable {
     public boolean onContextItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == R.id.note_list_item_menu_edit) {
             if (mLastSelectedPosition != -1) {
+                ((MainActivity) requireActivity()).showEditBar(false);
                 replaceFragments(EditorFragment.newInstance(mLastSelectedPosition));
             }
         } else if (item.getItemId() == R.id.note_list_item_menu_delete) {
             if (mLastSelectedPosition != -1) {
                 mNoteSource.remove(mLastSelectedPosition);
                 mViewHolderAdapter.notifyItemRemoved(mLastSelectedPosition);
-                mPrefsData.deleteNote(mLastSelectedPosition);
+                mPrefsData.deleteNote(mLastSelectedPosition, mNoteSource.getItemsCount());
                 mPrefsData.writeNotesQuantity(mNoteSource.getItemsCount());
             }
         } else {
@@ -142,15 +156,20 @@ public class NoteListFragment extends Fragment implements Parcelable {
         FragmentManager fragmentManager = requireActivity().getSupportFragmentManager();
         FragmentTransaction transaction = fragmentManager.beginTransaction();
         transaction.addToBackStack(null);
+        int fragmentId;
         if (mIsLandscape) {
-            transaction.replace(R.id.note_container, newFragment);
+            fragmentId = R.id.note_container;
             transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
             if (newFragment instanceof EditorFragment)
                 ((MainActivity) requireActivity()).showFloatingButton(false);
         } else {
-            transaction.replace(R.id.note_list_container, newFragment);
+            fragmentId = R.id.note_list_container;
             ((MainActivity) requireActivity()).showFloatingButton(false);
         }
+        String tag;
+        if (newFragment instanceof EditorFragment) tag = "Editor";
+        else tag = "Note";
+        transaction.replace(fragmentId, newFragment, tag);
         transaction.commit();
     }
 

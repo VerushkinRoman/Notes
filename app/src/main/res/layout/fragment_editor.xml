@@ -29,7 +29,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="7dp"
                         android:backgroundTint="@android:color/transparent"
-                        android:hint="Header"
+                        android:hint="@string/hint_note_header"
                         android:textAlignment="center"
                         android:textSize="30sp"
                         tools:text="Note header" />
@@ -44,7 +44,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:backgroundTint="@android:color/transparent"
-                        android:hint="Body"
+                        android:hint="@string/hint_note_body"
                         android:textSize="20sp"
                         tools:text="Note body" />
                 </com.google.android.material.textfield.TextInputLayout>
@@ -56,7 +56,7 @@
             android:id="@+id/btn_save"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Save"
+            android:text="@string/save_button_text"
             android:textSize="20sp" />
     </LinearLayout>
 </androidx.cardview.widget.CardView>

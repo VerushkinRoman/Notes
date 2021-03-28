@@ -13,17 +13,18 @@ public class PreferencesDataWorker {
     private static final String PREFERENCES_KEY_DATES = NoteSourceImpl.class.getCanonicalName() + "dates";
 
     private final SharedPreferences mPrefs;
+    private SharedPreferences.Editor mEditor;
 
     public PreferencesDataWorker(Context context) {
         mPrefs = context.getSharedPreferences(PREFERENCES_KEY, Context.MODE_PRIVATE);
     }
 
     public void writeNote(Note note) {
-        SharedPreferences.Editor editor = mPrefs.edit();
-        editor.putString(PREFERENCES_KEY_NAMES + "_" + note.getNoteIndex(), note.getName());
-        editor.putString(PREFERENCES_KEY_NOTES + "_" + note.getNoteIndex(), note.getDescription());
-        editor.putString(PREFERENCES_KEY_DATES + "_" + note.getNoteIndex(), note.getCreationDate());
-        editor.apply();
+        mEditor = mPrefs.edit();
+        mEditor.putString(PREFERENCES_KEY_NAMES + "_" + note.getNoteIndex(), note.getName());
+        mEditor.putString(PREFERENCES_KEY_NOTES + "_" + note.getNoteIndex(), note.getDescription());
+        mEditor.putString(PREFERENCES_KEY_DATES + "_" + note.getNoteIndex(), note.getCreationDate());
+        mEditor.apply();
     }
 
     public Note readNote(int index) {
@@ -33,12 +34,17 @@ public class PreferencesDataWorker {
                 mPrefs.getString(PREFERENCES_KEY_DATES + "_" + index, null));
     }
 
-    public void deleteNote(int index){
-        SharedPreferences.Editor editor = mPrefs.edit();
-        editor.remove(PREFERENCES_KEY_NAMES + "_" + index);
-        editor.remove(PREFERENCES_KEY_NOTES + "_" + index);
-        editor.remove(PREFERENCES_KEY_DATES + "_" + index);
-        editor.apply();
+    public void deleteNote(int index, int fullSize) {
+        mEditor = mPrefs.edit();
+        for (int i = index; i < fullSize; i++) {
+            mEditor.putString(PREFERENCES_KEY_NAMES + "_" + i, mPrefs.getString(PREFERENCES_KEY_NAMES + "_" + (i + 1), null));
+            mEditor.putString(PREFERENCES_KEY_NOTES + "_" + i, mPrefs.getString(PREFERENCES_KEY_NOTES + "_" + (i + 1), null));
+            mEditor.putString(PREFERENCES_KEY_DATES + "_" + i, mPrefs.getString(PREFERENCES_KEY_DATES + "_" + (i + 1), null));
+        }
+        mEditor.remove(PREFERENCES_KEY_NAMES + "_" + fullSize);
+        mEditor.remove(PREFERENCES_KEY_NOTES + "_" + fullSize);
+        mEditor.remove(PREFERENCES_KEY_DATES + "_" + fullSize);
+        mEditor.apply();
     }
 
     public int getNotesQuantity() {
@@ -46,8 +52,8 @@ public class PreferencesDataWorker {
     }
 
     public void writeNotesQuantity(int size) {
-        SharedPreferences.Editor editor = mPrefs.edit();
-        editor.putInt(PREFERENCES_KEY + "_size", size);
-        editor.apply();
+        mEditor = mPrefs.edit();
+        mEditor.putInt(PREFERENCES_KEY + "_size", size);
+        mEditor.apply();
     }
 }
