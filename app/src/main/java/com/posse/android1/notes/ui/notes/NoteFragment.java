@@ -1,6 +1,7 @@
-package com.posse.android1.notes;
+package com.posse.android1.notes.ui.notes;
 
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,17 +10,22 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textview.MaterialTextView;
+import com.posse.android1.notes.R;
 
-public class NotesFragment extends Fragment {
+public class NoteFragment extends Fragment {
 
     public static final String NOTE_INDEX = "NoteIndex";
-    private Note mNote;
+    private int mNoteIndex;
 
-    public static NotesFragment newInstance(Note note) {
-        NotesFragment fragment = new NotesFragment();
+    public NoteFragment() {
+    }
+
+    public static NoteFragment newInstance(int index) {
+        NoteFragment fragment = new NoteFragment();
         Bundle args = new Bundle();
-        args.putParcelable(NOTE_INDEX, note);
+        args.putInt(NOTE_INDEX, index);
         fragment.setArguments(args);
         return fragment;
     }
@@ -28,7 +34,7 @@ public class NotesFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mNote = getArguments().getParcelable(NOTE_INDEX);
+            mNoteIndex = getArguments().getInt(NOTE_INDEX, -1);
         }
     }
 
@@ -41,11 +47,12 @@ public class NotesFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        MaterialTextView noteText = view.findViewById(R.id.note_text);
         String[] notes = getResources().getStringArray(R.array.notes);
+        String[] header = getResources().getStringArray(R.array.notes_list);
+        MaterialTextView noteText = view.findViewById(R.id.note_text);
         noteText.setTextSize(30);
-        noteText.setText(notes[mNote.getNoteIndex()]);
+        noteText.setText(notes[mNoteIndex]);
         MaterialTextView noteHeading = view.findViewById(R.id.note_heading);
-        noteHeading.setText(mNote.getName());
+        noteHeading.setText(header[mNoteIndex]);
     }
 }

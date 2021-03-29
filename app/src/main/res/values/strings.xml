@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">Notes</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_header_title">Posse</string>
+    <string name="nav_header_subtitle">79206111373@yandex.ru</string>
+    <string name="nav_header_desc">Navigation header</string>
+    <string name="action_switch_view">Switch View</string>
+
+    <string name="menu_notes">Notes</string>
+    <string name="menu_settings">Settings</string>
 </resources>
