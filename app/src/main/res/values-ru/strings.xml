@@ -8,12 +8,11 @@
     <string name="menu_notes">Заметки</string>
     <string name="menu_settings">Настройки</string>
 
-    <string name="new_note_caption">Новая заметка</string>
-    <string name="hint_note_header">Заголовок</string>
+    <string name="hint_note_header">Тема</string>
     <string name="hint_note_body">Текст</string>
     <string name="save_button_text">Сохранить</string>
     <string name="new_note_button_description">кнопка новой заметки</string>
-    <string name="edit_bar_title">Редактировать</string>
+    <string name="edit_bar_title">кнопка Редактирования</string>
     <string name="edit_context_title">Редактировать</string>
     <string name="delete_context_title">Удалить</string>
     <string name="nav_header_desc">Заголовок навигации</string>

@@ -21,6 +21,7 @@ import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
+import com.posse.android1.notes.ui.editor.EditorFragment;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -28,6 +29,9 @@ import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
+    public static final int NOTE_LIST_VIEW = 1;
+    public static final int NOTE_VIEW = 2;
+    public static final int EDITOR_VIEW = 3;
     private static final int BACK_BUTTON_EXIT_DELAY = 3000;
     private static final int BACK_BUTTON_ACCIDENT_DELAY = 500;
     private static final String KEY_VIEW = MainActivity.class.getCanonicalName() + "mIsGridView";
@@ -108,30 +112,54 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         FragmentManager fragmentManager = getSupportFragmentManager();
-        if (!mIsLandscape) {
-            showFloatingButton(true);
-            showEditBar(false);
-            Fragment editorFragment = fragmentManager.findFragmentByTag("Editor");
-            if (editorFragment != null && editorFragment.isVisible()) {
-                showEditBar(true);
-                showFloatingButton(false);
-            } else showSwitchView(true);
-            Fragment noteListFragment = fragmentManager.findFragmentByTag("ListOfNotes");
-            if (noteListFragment != null && noteListFragment.isVisible()) {
-                checkExit();
-            } else {
-                super.onBackPressed();
-                mIsBackShown = false;
-            }
-        } else if (fragmentManager.getBackStackEntryCount() > 1) {
-            super.onBackPressed();
+        Fragment noteListFragment = fragmentManager.findFragmentByTag("ListOfNotes");
+        Fragment noteFragment = fragmentManager.findFragmentByTag("Note");
+        EditorFragment editorFragment = (EditorFragment) fragmentManager.findFragmentByTag("Editor");
+        if (editorFragment != null && editorFragment.isVisible()) {
+            showHideButtons(NOTE_VIEW);
+            editorFragment.saveNote();
             mIsBackShown = false;
-            showEditBar(true);
-            showFloatingButton(true);
-        } else {
+            if (mIsLandscape) super.onBackPressed();
+        }
+        if (noteListFragment != null && noteListFragment.isVisible()) {
+            int view = mIsLandscape ? NOTE_VIEW : NOTE_LIST_VIEW;
+            showHideButtons(view);
             checkExit();
+        } else {
+            super.onBackPressed();
+            if (noteListFragment != null && noteListFragment.isVisible()) {
+                showHideButtons(NOTE_LIST_VIEW);
+            }
+            mIsBackShown = false;
+        }
+        if (noteFragment != null && noteFragment.isVisible()) {
+            showHideButtons(NOTE_VIEW);
+            mIsBackShown = false;
         }
         mLastTimePressed = System.currentTimeMillis();
+    }
+
+    public void showHideButtons(int view) {
+        switch (view) {
+            case NOTE_VIEW:
+                showFloatingButton(mIsLandscape);
+                showSwitchView(false);
+                showEditBar(true);
+                break;
+            case NOTE_LIST_VIEW:
+                showFloatingButton(true);
+                showSwitchView(true);
+                showEditBar(false);
+                break;
+            case EDITOR_VIEW:
+                showFloatingButton(false);
+                showEditBar(false);
+                showSwitchView(false);
+                break;
+            default:
+                throw new RuntimeException("Unexpected view: " + view);
+        }
+
     }
 
     private void checkExit() {
@@ -156,11 +184,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void showSwitchView(boolean isVisible) {
+    private void showSwitchView(boolean isVisible) {
         if (mSwitchView != null) mSwitchView.setVisible(isVisible);
     }
 
-    public void showEditBar(boolean isVisible) {
+    private void showEditBar(boolean isVisible) {
         if (mEditBar != null) mEditBar.setVisible(isVisible);
     }
 
