@@ -113,7 +113,7 @@ public class NoteListFragment extends Fragment implements Parcelable, EditorList
             }
         }
         ((MainActivity) requireActivity()).setMenuEditClickListener((MenuItem.OnMenuItemClickListener) item -> {
-            replaceFragments(EditorFragment.newInstance(mCurrentNote.getNoteIndex(), this));
+            replaceFragments(EditorFragment.newInstance(mLastSelectedPosition, this));
             return false;
         });
         if (mIsLandscape) {
@@ -207,13 +207,13 @@ public class NoteListFragment extends Fragment implements Parcelable, EditorList
     public void noteSaved(Note note) {
         hideKeyboard();
         mPrefsData.writeNote(note);
-        ((MainActivity) requireActivity()).showHideButtons(MainActivity.NOTE_VIEW);
         mViewHolderAdapter.notifyItemChanged(note.getNoteIndex());
         requireActivity().getSupportFragmentManager().popBackStack();
         if (note.getName().equals("") && note.getDescription().equals("")) {
             deleteNote(mNoteSource.getItemsCount() - 1);
         }
         showNote(note);
+        ((MainActivity) requireActivity()).showHideButtons(MainActivity.NOTE_VIEW);
     }
 
     private void hideKeyboard() {

@@ -67,10 +67,7 @@ public class EditorFragment extends Fragment {
         InputMethodManager inputMethodManager = (InputMethodManager) requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
         inputMethodManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
         MaterialButton btnSave = view.findViewById(R.id.btn_save);
-        btnSave.setOnClickListener((v) -> {
-            saveNote();
-            requireActivity().getSupportFragmentManager().popBackStack();
-        });
+        btnSave.setOnClickListener((v) -> saveNote());
         return view;
     }
 

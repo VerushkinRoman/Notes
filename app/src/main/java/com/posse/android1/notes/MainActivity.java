@@ -116,10 +116,9 @@ public class MainActivity extends AppCompatActivity {
         Fragment noteFragment = fragmentManager.findFragmentByTag("Note");
         EditorFragment editorFragment = (EditorFragment) fragmentManager.findFragmentByTag("Editor");
         if (editorFragment != null && editorFragment.isVisible()) {
-            showHideButtons(NOTE_VIEW);
             editorFragment.saveNote();
+            if (!mIsLandscape) showHideButtons(NOTE_LIST_VIEW);
             mIsBackShown = false;
-            if (mIsLandscape) super.onBackPressed();
         }
         if (noteListFragment != null && noteListFragment.isVisible()) {
             int view = mIsLandscape ? NOTE_VIEW : NOTE_LIST_VIEW;
