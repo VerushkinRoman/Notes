@@ -5,5 +5,5 @@ import android.os.Parcelable;
 import com.posse.android1.notes.note.Note;
 
 public interface EditorListener extends Parcelable {
-    void noteSaved(Note note);
+    void noteSaved(Note note, int idx);
 }

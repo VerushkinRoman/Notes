@@ -133,7 +133,10 @@ public class MainActivity extends AppCompatActivity {
         }
         if (noteFragment != null && noteFragment.isVisible()) {
             showHideButtons(NOTE_VIEW);
-            mIsBackShown = false;
+            if (!mIsLandscape) {
+                mIsBackShown = false;
+                super.onBackPressed();
+            }
         }
         mLastTimePressed = System.currentTimeMillis();
     }

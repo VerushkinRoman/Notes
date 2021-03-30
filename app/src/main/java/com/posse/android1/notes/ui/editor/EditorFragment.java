@@ -15,7 +15,7 @@ import com.posse.android1.notes.DateFormatter;
 import com.posse.android1.notes.R;
 import com.posse.android1.notes.note.Note;
 import com.posse.android1.notes.note.NoteSource;
-import com.posse.android1.notes.note.NoteSourceImpl;
+import com.posse.android1.notes.note.firestore.NoteSourceFirestoreImpl;
 
 import java.util.Objects;
 
@@ -27,6 +27,7 @@ public class EditorFragment extends Fragment {
     private Note mNote;
     private TextInputEditText mEditNoteHeader;
     private TextInputEditText mEditNoteBody;
+    private NoteSource mNoteSource;
 
     public EditorFragment() {
     }
@@ -47,18 +48,20 @@ public class EditorFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        NoteSource noteSource = NoteSourceImpl.getInstance(requireActivity());
         if (getArguments() != null) {
             mCurrentNoteIndex = getArguments().getInt(KEY_NOTE_INDEX, -1);
             mListener = getArguments().getParcelable(KEY_LISTENER);
         }
-        mNote = noteSource.getItemAt(mCurrentNoteIndex);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_editor, container, false);
+
+        mNoteSource = NoteSourceFirestoreImpl.getInstance();
+        mNote = mNoteSource.getItemAt(mCurrentNoteIndex);
+
         mEditNoteHeader = view.findViewById(R.id.note_heading);
         mEditNoteHeader.setText(mNote.getName());
         mEditNoteBody = view.findViewById(R.id.note_body);
@@ -75,6 +78,7 @@ public class EditorFragment extends Fragment {
         mNote.setName(Objects.requireNonNull(mEditNoteHeader.getText()).toString());
         mNote.setDescription(Objects.requireNonNull(mEditNoteBody.getText()).toString());
         mNote.setCreationDate(DateFormatter.getCurrentDate());
-        mListener.noteSaved(mNote);
+        mNoteSource.update(mNote);
+        mListener.noteSaved(mNote, mCurrentNoteIndex);
     }
 }

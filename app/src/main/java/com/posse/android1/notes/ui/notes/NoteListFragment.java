@@ -24,12 +24,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.posse.android1.notes.DateFormatter;
 import com.posse.android1.notes.MainActivity;
-import com.posse.android1.notes.PreferencesDataWorker;
 import com.posse.android1.notes.R;
 import com.posse.android1.notes.adapter.ViewHolderAdapter;
 import com.posse.android1.notes.note.Note;
 import com.posse.android1.notes.note.NoteSource;
-import com.posse.android1.notes.note.NoteSourceImpl;
+import com.posse.android1.notes.note.firestore.NoteSourceFirestoreImpl;
 import com.posse.android1.notes.ui.editor.EditorFragment;
 import com.posse.android1.notes.ui.editor.EditorListener;
 
@@ -55,8 +54,37 @@ public class NoteListFragment extends Fragment implements Parcelable, EditorList
     private Note mCurrentNote;
     private NoteSource mNoteSource;
     private ViewHolderAdapter mViewHolderAdapter;
+    private final NoteSource.NoteSourceListener mListener = new NoteSource.NoteSourceListener() {
+        @Override
+        public void onItemAdded(int idx) {
+            if (mViewHolderAdapter != null) {
+                mViewHolderAdapter.notifyItemInserted(idx);
+            }
+        }
+
+        @Override
+        public void onItemRemoved(int idx) {
+            if (mViewHolderAdapter != null) {
+                mViewHolderAdapter.notifyItemRemoved(idx);
+            }
+        }
+
+        @Override
+        public void onItemUpdated(int idx) {
+            if (mViewHolderAdapter != null) {
+                mViewHolderAdapter.notifyItemChanged(idx);
+            }
+        }
+
+        @Override
+        public void onDataSetChanged() {
+            if (mViewHolderAdapter != null) {
+                mViewHolderAdapter.notifyDataSetChanged();
+            }
+        }
+    };
     private int mLastSelectedPosition = -1;
-    private PreferencesDataWorker mPrefsData;
+
 
     public NoteListFragment() {
     }
@@ -66,20 +94,29 @@ public class NoteListFragment extends Fragment implements Parcelable, EditorList
     }
 
     @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        ((MainActivity) requireActivity()).setMenuEditClickListener(item -> {
+            replaceFragments(EditorFragment.newInstance(mLastSelectedPosition, this));
+            return false;
+        });
+    }
+
+    @Override
     public View onCreateView(@NotNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mIsLandscape = getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
-        mPrefsData = new PreferencesDataWorker(requireActivity());
         RecyclerView recyclerView = (RecyclerView) inflater.inflate(R.layout.fragment_note_list, container, false);
         recyclerView.setHasFixedSize(true);
 
+        mNoteSource = NoteSourceFirestoreImpl.getInstance();
+        mNoteSource.addNoteSourceListener(mListener);
+
         FloatingActionButton fab = requireActivity().findViewById(R.id.fab);
         fab.setOnClickListener(v -> {
-            mNoteSource.add(new Note(mNoteSource.getItemsCount(), "", "", DateFormatter.getCurrentDate()));
+            mNoteSource.add(new Note("", "", DateFormatter.getCurrentDate()));
             replaceFragments(EditorFragment.newInstance(mNoteSource.getItemsCount() - 1, this));
             int position = mNoteSource.getItemsCount() - 1;
             mViewHolderAdapter.notifyItemInserted(position);
-            mPrefsData.writeNote(mNoteSource.getItemAt(position));
-            mPrefsData.writeNotesQuantity(mNoteSource.getItemsCount());
             recyclerView.scrollToPosition(position);
         });
 
@@ -91,7 +128,6 @@ public class NoteListFragment extends Fragment implements Parcelable, EditorList
         }
         recyclerView.setLayoutManager(layoutManager);
 
-        mNoteSource = NoteSourceImpl.getInstance(requireActivity());
         mViewHolderAdapter = new ViewHolderAdapter(this, mNoteSource);
         mViewHolderAdapter.setOnClickListener((v, position) -> {
             mCurrentNote = mNoteSource.getItemAt(position);
@@ -100,6 +136,12 @@ public class NoteListFragment extends Fragment implements Parcelable, EditorList
         recyclerView.setAdapter(mViewHolderAdapter);
 
         return recyclerView;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        mNoteSource.removeNoteSourceListener(mListener);
     }
 
     @Override
@@ -112,10 +154,6 @@ public class NoteListFragment extends Fragment implements Parcelable, EditorList
                 return;
             }
         }
-        ((MainActivity) requireActivity()).setMenuEditClickListener((MenuItem.OnMenuItemClickListener) item -> {
-            replaceFragments(EditorFragment.newInstance(mLastSelectedPosition, this));
-            return false;
-        });
         if (mIsLandscape) {
             showNote(mCurrentNote);
         }
@@ -152,8 +190,6 @@ public class NoteListFragment extends Fragment implements Parcelable, EditorList
             mNoteSource.remove(idx);
             mViewHolderAdapter.notifyItemRemoved(idx);
             mViewHolderAdapter.notifyDataSetChanged();
-            mPrefsData.deleteNote(idx, mNoteSource.getItemsCount());
-            mPrefsData.writeNotesQuantity(mNoteSource.getItemsCount());
             if (mIsLandscape) {
                 if (mNoteSource.getItemsCount() > 0) {
                     int position = Math.max(idx - 1, 0);
@@ -204,10 +240,9 @@ public class NoteListFragment extends Fragment implements Parcelable, EditorList
     }
 
     @Override
-    public void noteSaved(Note note) {
+    public void noteSaved(Note note, int idx) {
         hideKeyboard();
-        mPrefsData.writeNote(note);
-        mViewHolderAdapter.notifyItemChanged(note.getNoteIndex());
+        mViewHolderAdapter.notifyItemChanged(idx);
         requireActivity().getSupportFragmentManager().popBackStack();
         if (note.getName().equals("") && note.getDescription().equals("")) {
             deleteNote(mNoteSource.getItemsCount() - 1);

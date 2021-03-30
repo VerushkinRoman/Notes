@@ -3,6 +3,8 @@ package com.posse.android1.notes.note;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import androidx.annotation.Nullable;
+
 public class Note implements Parcelable {
     public static final Creator<Note> CREATOR = new Creator<Note>() {
         @Override
@@ -15,28 +17,32 @@ public class Note implements Parcelable {
             return new Note[size];
         }
     };
+    @Nullable
+    private String mId;
 
-    private final int mNoteIndex;
     private String mName;
     private String mDescription;
     private String mCreationDate;
 
-    public Note(int noteIndex, String name, String description, String creationDate) {
-        mNoteIndex = noteIndex;
+    public Note(String name, String description, String creationDate) {
         mName = name;
         mDescription = description;
         mCreationDate = creationDate;
     }
 
+    public String getId() {
+        return mId;
+    }
+
+    public void setId(@Nullable String id) {
+        mId = id;
+    }
+
     protected Note(Parcel in) {
-        mNoteIndex = in.readInt();
         mName = in.readString();
         mDescription = in.readString();
         mCreationDate = in.readString();
-    }
-
-    public int getNoteIndex() {
-        return mNoteIndex;
+        mId = in.readString();
     }
 
     public String getName() {
@@ -70,9 +76,9 @@ public class Note implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeInt(mNoteIndex);
         dest.writeString(mName);
         dest.writeString(mDescription);
         dest.writeString(mCreationDate);
+        dest.writeString(mId);
     }
 }
