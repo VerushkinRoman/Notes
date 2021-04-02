@@ -1,7 +1,6 @@
 package com.posse.android1.notes.adapter;
 
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
@@ -34,8 +33,7 @@ public class ViewHolderAdapter extends RecyclerView.Adapter<ViewHolder> {
     @NotNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View v = mInflater.inflate(R.layout.list_compact_note, parent, false);
-        return new ViewHolder(v);
+        return new ViewHolder(mInflater.inflate(R.layout.list_compact_note, parent, false));
     }
 
     @Override

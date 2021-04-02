@@ -16,4 +16,10 @@
     <string name="edit_context_title">Edit</string>
     <string name="delete_context_title">Delete</string>
     <string name="settings_fragment_message">This is settings fragment</string>
+
+    <string name="delete_confirmation">Delete current note?</string>
+    <string name="back_exit_confirmation">Press \"BACK\" again to exit</string>
+    <string name="no">No</string>
+    <string name="yes">Yes</string>
+    <string name="delete_dialog">Delete dialog</string>
 </resources>

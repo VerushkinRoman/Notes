@@ -32,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
     public static final int NOTE_LIST_VIEW = 1;
     public static final int NOTE_VIEW = 2;
     public static final int EDITOR_VIEW = 3;
+    public static final int EMPTY_VIEW = 4;
     private static final int BACK_BUTTON_EXIT_DELAY = 3000;
     private static final int BACK_BUTTON_ACCIDENT_DELAY = 500;
     private static final String KEY_VIEW = MainActivity.class.getCanonicalName() + "mIsGridView";
@@ -43,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
     private MenuItem mSwitchView;
     private MenuItem mEditBar;
     private boolean mIsLandscape;
+    private boolean mIsEmpty;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,9 +70,6 @@ public class MainActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.main, menu);
         mSwitchView = menu.findItem(R.id.action_switch_view);
         mEditBar = menu.findItem(R.id.edit_bar);
-        if (mIsLandscape) {
-            showSwitchView(false);
-        } else showEditBar(false);
         Drawable gridView = Objects.requireNonNull(ContextCompat.getDrawable(this, android.R.drawable.ic_dialog_dialer));
         Drawable lineView = Objects.requireNonNull(ContextCompat.getDrawable(this, android.R.drawable.ic_menu_sort_by_size));
         Drawable menuIcon = isGridView() ? gridView : lineView;
@@ -117,43 +116,54 @@ public class MainActivity extends AppCompatActivity {
         EditorFragment editorFragment = (EditorFragment) fragmentManager.findFragmentByTag("Editor");
         if (editorFragment != null && editorFragment.isVisible()) {
             editorFragment.saveNote();
-            if (!mIsLandscape) showHideButtons(NOTE_LIST_VIEW);
             mIsBackShown = false;
+            return;
         }
+        int view = mIsLandscape ? NOTE_VIEW : NOTE_LIST_VIEW;
         if (noteListFragment != null && noteListFragment.isVisible()) {
-            int view = mIsLandscape ? NOTE_VIEW : NOTE_LIST_VIEW;
-            showHideButtons(view);
             checkExit();
         } else {
             super.onBackPressed();
             if (noteListFragment != null && noteListFragment.isVisible()) {
-                showHideButtons(NOTE_LIST_VIEW);
+                view = NOTE_LIST_VIEW;
             }
             mIsBackShown = false;
         }
         if (noteFragment != null && noteFragment.isVisible()) {
-            showHideButtons(NOTE_VIEW);
-            mIsBackShown = false;
+            view = NOTE_VIEW;
+            if (!mIsLandscape) {
+                mIsBackShown = false;
+                super.onBackPressed();
+            }
         }
+        if (mIsEmpty) view = EMPTY_VIEW;
+        showHideButtons(view);
         mLastTimePressed = System.currentTimeMillis();
     }
 
     public void showHideButtons(int view) {
         switch (view) {
-            case NOTE_VIEW:
-                showFloatingButton(mIsLandscape);
-                showSwitchView(false);
-                showEditBar(true);
-                break;
             case NOTE_LIST_VIEW:
                 showFloatingButton(true);
                 showSwitchView(true);
                 showEditBar(false);
                 break;
+            case NOTE_VIEW:
+                showFloatingButton(mIsLandscape);
+                showSwitchView(false);
+                showEditBar(true);
+                mIsEmpty = false;
+                break;
             case EDITOR_VIEW:
                 showFloatingButton(false);
                 showEditBar(false);
                 showSwitchView(false);
+                break;
+            case EMPTY_VIEW:
+                showFloatingButton(true);
+                showEditBar(false);
+                showSwitchView(!mIsLandscape);
+                mIsEmpty = true;
                 break;
             default:
                 throw new RuntimeException("Unexpected view: " + view);
@@ -162,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void checkExit() {
-        Toast.makeText(this, "Press \"BACK\" again to exit", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, R.string.back_exit_confirmation, Toast.LENGTH_SHORT).show();
         if (System.currentTimeMillis() - mLastTimePressed < BACK_BUTTON_EXIT_DELAY
                 && System.currentTimeMillis() - mLastTimePressed > BACK_BUTTON_ACCIDENT_DELAY
                 && mIsBackShown) {
@@ -175,7 +185,7 @@ public class MainActivity extends AppCompatActivity {
         mEditClickListener = listener;
     }
 
-    public void showFloatingButton(boolean isVisible) {
+    private void showFloatingButton(boolean isVisible) {
         FloatingActionButton fab = findViewById(R.id.fab);
         if (fab != null) {
             if (isVisible) fab.show();

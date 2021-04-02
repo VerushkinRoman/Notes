@@ -50,5 +50,7 @@ public class NoteFragment extends Fragment {
         noteText.setText(mNote.getDescription());
         MaterialTextView noteHeading = view.findViewById(R.id.note_heading);
         noteHeading.setText(mNote.getName());
+        MaterialTextView noteDate = view.findViewById(R.id.note_date_time);
+        noteDate.setText(mNote.getCreationDate());
     }
 }
