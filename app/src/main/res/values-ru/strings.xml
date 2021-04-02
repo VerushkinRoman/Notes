@@ -17,4 +17,9 @@
     <string name="delete_context_title">Удалить</string>
     <string name="nav_header_desc">Заголовок навигации</string>
     <string name="settings_fragment_message">Тут будут настройки</string>
+    <string name="delete_confirmation">Удалить текущую заметку?</string>
+    <string name="back_exit_confirmation">Нажмите \"НАЗАД\" для выхода</string>
+    <string name="no">Нет</string>
+    <string name="yes">Да</string>
+    <string name="delete_dialog">Диалог удаления</string>
 </resources>
