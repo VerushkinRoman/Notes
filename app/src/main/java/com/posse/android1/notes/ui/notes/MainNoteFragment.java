@@ -5,9 +5,9 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
@@ -24,14 +24,17 @@ import com.posse.android1.notes.note.Note;
 import com.posse.android1.notes.note.NoteSource;
 import com.posse.android1.notes.note.NoteSourceImpl;
 import com.posse.android1.notes.ui.editor.EditorFragment;
-import com.posse.android1.notes.ui.editor.EditorListener;
 
-import java.util.List;
+import java.util.Objects;
 
-import static android.content.Context.INPUT_METHOD_SERVICE;
+public class MainNoteFragment extends Fragment implements NoteListFragmentListener {
 
-public class MainNoteFragment extends Fragment implements NoteListFragmentListener, EditorListener {
-
+    public static final String KEY_REQUEST_CLICKED_POSITION = MainNoteFragment.class.getCanonicalName() + "requestClick";
+    public static final String KEY_REQUEST_LONG_CLICKED_POSITION = MainNoteFragment.class.getCanonicalName() + "requestLongClick";
+    public static final String KEY_REQUEST_DELETION_CONFIRMATION = MainNoteFragment.class.getCanonicalName() + "requestDelete";
+    public static final String KEY_REQUEST_NOTE_TO_SAVE = MainNoteFragment.class.getCanonicalName() + "requestNote";
+    public static final String KEY_BUTTONS_LOOK = MainNoteFragment.class.getCanonicalName() + "buttonsLook";
+    public static final String KEY_DELETE_POSITION = MainNoteFragment.class.getCanonicalName() + "deletePosition";
     private static final String KEY_LAST_SELECTED = MainNoteFragment.class.getCanonicalName() + "mLastSelectedPosition";
     private static final String KEY_NEW_NOTE = MainNoteFragment.class.getCanonicalName() + "mIsNewNote";
     private NoteListFragment mNoteListFragment;
@@ -50,12 +53,34 @@ public class MainNoteFragment extends Fragment implements NoteListFragmentListen
         super.onCreate(savedInstanceState);
         mFragmentManager = requireActivity().getSupportFragmentManager();
         mNoteSource = NoteSourceImpl.getInstance(requireActivity());
+
         mIsLandscape = getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
         mPrefsData = new PreferencesDataWorker(requireActivity());
         if (savedInstanceState != null) {
             mLastSelectedPosition = savedInstanceState.getInt(KEY_LAST_SELECTED);
             mIsNewNote = savedInstanceState.getBoolean(KEY_NEW_NOTE);
+            mEditorFragment = (EditorFragment) mFragmentManager.findFragmentByTag("Editor");
         }
+        setResultListeners();
+    }
+
+    private void setResultListeners() {
+        mFragmentManager.setFragmentResultListener(KEY_REQUEST_CLICKED_POSITION, this, (requestKey, bundle) -> {
+            mLastSelectedPosition = bundle.getInt(NoteListFragment.KEY_POSITION_CLICKED);
+            showNote(mNoteSource.getItemAt(mLastSelectedPosition));
+        });
+        mFragmentManager.setFragmentResultListener(KEY_REQUEST_LONG_CLICKED_POSITION, this, (requestKey, bundle)
+                -> mLastSelectedPosition = bundle.getInt(NoteListFragment.KEY_POSITION_LONG_CLICKED));
+        mFragmentManager.setFragmentResultListener(KEY_REQUEST_DELETION_CONFIRMATION, this, (requestKey, bundle) -> {
+            deleteNote(mLastSelectedPosition);
+            Bundle result = new Bundle();
+            result.putInt(KEY_DELETE_POSITION, mLastSelectedPosition);
+            requireActivity().getSupportFragmentManager().setFragmentResult(NoteListFragment.KEY_REQUEST_DELETE_POSITION, result);
+        });
+        mFragmentManager.setFragmentResultListener(KEY_REQUEST_NOTE_TO_SAVE, this, (requestKey, bundle) -> {
+            Note note = bundle.getParcelable(EditorFragment.KEY_NOTE);
+            saveNote(note);
+        });
     }
 
     @Override
@@ -67,48 +92,23 @@ public class MainNoteFragment extends Fragment implements NoteListFragmentListen
             FragmentContainerView fragmentView = view.findViewById(R.id.note_container);
             fragmentView.setLayoutParams(params);
         }
-        ((MainActivity) requireActivity()).setMenuEditClickListener(item -> {
-            mEditorFragment = EditorFragment.newInstance(mLastSelectedPosition, mNoteSource.getItemsCount(), this);
-            replaceFragments(mEditorFragment);
-            return false;
-        });
         return view;
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        Fragment mainFragmentToReplace = null;
-        Fragment editorFragment = null;
         if (savedInstanceState != null) {
             mNoteListFragment = (NoteListFragment) mFragmentManager.findFragmentByTag("ListOfNotes");
-            List<Fragment> fragments = mFragmentManager.getFragments();
-            Fragment fragment = fragments.get(fragments.size() - 1);
-            if (fragment instanceof EditorFragment) {
-                Fragment.SavedState savedState = mFragmentManager.saveFragmentInstanceState(fragment);
-                Fragment newInstance = null;
-                try {
-                    newInstance = fragment.getClass().newInstance();
-                } catch (IllegalAccessException | java.lang.InstantiationException ignored) {
-                }
-                newInstance.setInitialSavedState(savedState);
-                ((EditorFragment) newInstance).setListener(this);
-                mEditorFragment = (EditorFragment) newInstance;
-                if (!mIsLandscape) mainFragmentToReplace = newInstance;
-                else editorFragment = newInstance;
-            }
         } else {
             mNoteListFragment = new NoteListFragment();
         }
-        mNoteListFragment.setListener(this);
-        if (mainFragmentToReplace == null) mainFragmentToReplace = mNoteListFragment;
-        replaceFragments(mainFragmentToReplace);
+        Objects.requireNonNull(mNoteListFragment).setListener(this);
+        replaceFragments(mNoteListFragment);
         if (mNoteSource.getItemsCount() == 0) return;
         if (mIsLandscape) {
-            if (editorFragment == null) {
-                mCurrentNote = mNoteSource.getItemAt(mLastSelectedPosition);
-                showNote(mCurrentNote);
-            } else replaceFragments(editorFragment);
+            mCurrentNote = mNoteSource.getItemAt(mLastSelectedPosition);
+            showNote(mCurrentNote);
         }
     }
 
@@ -122,7 +122,18 @@ public class MainNoteFragment extends Fragment implements NoteListFragmentListen
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
-        ((MainActivity) requireActivity()).showHideButtons(mButtonsView);
+        MenuItem editBar = menu.findItem(R.id.edit_bar);
+        editBar.setOnMenuItemClickListener(item -> {
+            showEditor(mLastSelectedPosition);
+            return false;
+        });
+        setButtonsView(mButtonsView);
+    }
+
+    private void setButtonsView(int view) {
+        Bundle result = new Bundle();
+        result.putInt(KEY_BUTTONS_LOOK, view);
+        mFragmentManager.setFragmentResult(MainActivity.KEY_REQUEST, result);
     }
 
     private void showNote(Note note) {
@@ -131,25 +142,12 @@ public class MainNoteFragment extends Fragment implements NoteListFragmentListen
 
     @Override
     public void onAddButtonPressed() {
-        mEditorFragment = EditorFragment.newInstance(-1, mNoteSource.getItemsCount(), this);
-        replaceFragments(mEditorFragment);
+        showEditor(-1);
         mIsNewNote = true;
-    }
-
-    @Override
-    public void onListItemClicked(int idx) {
-        onLastSelectedPositionChanged(idx);
-        showNote(mNoteSource.getItemAt(idx));
-    }
-
-    @Override
-    public NoteSource onSourceRequest() {
-        return mNoteSource;
     }
 
     private void replaceFragments(Fragment newFragment) {
         FragmentTransaction transaction = mFragmentManager.beginTransaction();
-        transaction.addToBackStack(null);
         mButtonsView = MainActivity.NOTE_VIEW;
         int fragmentId = R.id.note_list_container;
         String tag = "Note";
@@ -160,11 +158,8 @@ public class MainNoteFragment extends Fragment implements NoteListFragmentListen
             fragmentId = R.id.note_container;
             transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
         }
-        if (newFragment instanceof EditorFragment) {
-            tag = "Editor";
-            mButtonsView = MainActivity.EDITOR_VIEW;
-        }
-        ((MainActivity) requireActivity()).showHideButtons(mButtonsView);
+        setButtonsView(mButtonsView);
+        transaction.addToBackStack(null);
         transaction.replace(fragmentId, newFragment, tag);
         transaction.commit();
     }
@@ -182,64 +177,47 @@ public class MainNoteFragment extends Fragment implements NoteListFragmentListen
                 } else {
                     FragmentTransaction fragmentTransaction = mFragmentManager.beginTransaction();
                     Fragment fragment = mFragmentManager.findFragmentByTag("Note");
-                    fragmentTransaction.detach(fragment);
+                    fragmentTransaction.detach(Objects.requireNonNull(fragment));
                     fragmentTransaction.commit();
                     mLastSelectedPosition = -1;
-                    ((MainActivity) requireActivity()).showHideButtons(MainActivity.EMPTY_VIEW);
+                    setButtonsView(MainActivity.EMPTY_VIEW);
                 }
             }
         }
     }
 
     @Override
-    public void onLastSelectedPositionChanged(int lastSelectedPosition) {
-        mLastSelectedPosition = lastSelectedPosition;
-    }
-
-    @Override
     public void onContextEditMenuSelected() {
         if (mLastSelectedPosition != -1) {
-            mEditorFragment = EditorFragment.newInstance(mLastSelectedPosition, mNoteSource.getItemsCount(), this);
-            replaceFragments(mEditorFragment);
+            showEditor(mLastSelectedPosition);
         }
     }
 
-    @Override
-    public int onContextDeleteMenuSelected() {
-        deleteNote(mLastSelectedPosition);
-        return mLastSelectedPosition;
+    private void showEditor(int lastSelectedPosition) {
+        mEditorFragment = new EditorFragment(lastSelectedPosition, mNoteSource.getItemsCount());
+        mEditorFragment.show(mFragmentManager, "Editor");
     }
 
-    @Override
-    public void noteSaved(Note note) {
-        hideKeyboard();
-        mButtonsView = MainActivity.NOTE_VIEW;
+    public void saveNote(Note note) {
+        mButtonsView = MainActivity.NOTE_LIST_VIEW;
         if (!note.getName().equals("") || !note.getDescription().equals("")) {
             mPrefsData.writeNote(note);
             if (mIsNewNote) {
                 mNoteSource.add(note);
                 mPrefsData.writeNotesQuantity(mNoteSource.getItemsCount());
-                mFragmentManager.popBackStack();
-                showNote(note);
                 mLastSelectedPosition = note.getNoteIndex();
-            } else {
-                mFragmentManager.popBackStack();
-            }
+            } else mButtonsView = MainActivity.NOTE_VIEW;
             mNoteListFragment.onDataChanged(note.getNoteIndex(), mIsNewNote);
             mIsNewNote = false;
-        } else {
-            mFragmentManager.popBackStack();
-            if (!mIsLandscape) mButtonsView = MainActivity.NOTE_LIST_VIEW;
+            if (mIsLandscape) {
+                showNote(note);
+            } else{
+            }
+        }
+        if (mIsLandscape) {
+            mButtonsView = MainActivity.NOTE_VIEW;
         }
         if (mNoteSource.getItemsCount() == 0) mButtonsView = MainActivity.EMPTY_VIEW;
-        ((MainActivity) requireActivity()).showHideButtons(mButtonsView);
-    }
-
-    private void hideKeyboard() {
-        try {
-            InputMethodManager imm = (InputMethodManager) requireActivity().getSystemService(INPUT_METHOD_SERVICE);
-            imm.hideSoftInputFromWindow(requireActivity().getCurrentFocus().getWindowToken(), 0);
-        } catch (Exception ignored) {
-        }
+        setButtonsView(mButtonsView);
     }
 }

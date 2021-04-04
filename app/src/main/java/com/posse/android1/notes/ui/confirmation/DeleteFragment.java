@@ -9,27 +9,15 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.TextView;
 
-import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
 import com.google.android.material.button.MaterialButton;
 import com.posse.android1.notes.R;
+import com.posse.android1.notes.ui.notes.MainNoteFragment;
 
 import java.util.Objects;
 
 public class DeleteFragment extends DialogFragment {
-
-    private final DialogListener mListener;
-
-    public DeleteFragment(DialogListener listener) {
-        mListener = listener;
-    }
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setRetainInstance(true);
-    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -39,13 +27,11 @@ public class DeleteFragment extends DialogFragment {
         MaterialButton btnYes = view.findViewById(R.id.confirm_button);
         btnYes.setOnClickListener(v -> {
             dismiss();
-            mListener.onOkClicked();
+            Bundle result = new Bundle();
+            requireActivity().getSupportFragmentManager().setFragmentResult(MainNoteFragment.KEY_REQUEST_DELETION_CONFIRMATION, result);
         });
         MaterialButton btnNo = view.findViewById(R.id.cancel_button);
-        btnNo.setOnClickListener(v -> {
-            dismiss();
-            mListener.onCancelClicked();
-        });
+        btnNo.setOnClickListener(v -> dismiss());
         setCancelable(false);
         return view;
     }

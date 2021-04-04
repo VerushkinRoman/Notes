@@ -20,16 +20,29 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.posse.android1.notes.MainActivity;
 import com.posse.android1.notes.R;
 import com.posse.android1.notes.adapter.ViewHolderAdapter;
+import com.posse.android1.notes.note.NoteSourceImpl;
 import com.posse.android1.notes.ui.confirmation.DeleteFragment;
-import com.posse.android1.notes.ui.confirmation.DialogListener;
 
 import org.jetbrains.annotations.NotNull;
 
-public class NoteListFragment extends Fragment implements DialogListener {
+public class NoteListFragment extends Fragment {
 
+    public static final String KEY_POSITION_CLICKED = NoteListFragment.class.getCanonicalName() + "position";
+    public static final String KEY_REQUEST_DELETE_POSITION = NoteListFragment.class.getCanonicalName() + "deletePosition";
+    public static final String KEY_POSITION_LONG_CLICKED = NoteListFragment.class.getCanonicalName() + "positionLongClick";
     private NoteListFragmentListener mListener;
     private ViewHolderAdapter mViewHolderAdapter;
     private RecyclerView mRecyclerView;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        requireActivity().getSupportFragmentManager().setFragmentResultListener(KEY_REQUEST_DELETE_POSITION, this, (requestKey, result) -> {
+            int deletePosition = result.getInt(MainNoteFragment.KEY_DELETE_POSITION);
+            mViewHolderAdapter.notifyItemRemoved(deletePosition);
+            mViewHolderAdapter.notifyDataSetChanged();
+        });
+    }
 
     @Override
     public View onCreateView(@NotNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -49,8 +62,12 @@ public class NoteListFragment extends Fragment implements DialogListener {
         }
         mRecyclerView.setLayoutManager(layoutManager);
 
-        mViewHolderAdapter = new ViewHolderAdapter(this, mListener.onSourceRequest());
-        mViewHolderAdapter.setOnClickListener((v, position) -> mListener.onListItemClicked(position));
+        mViewHolderAdapter = new ViewHolderAdapter(this, NoteSourceImpl.getInstance(requireActivity()));
+        mViewHolderAdapter.setOnClickListener((v, position) -> {
+            Bundle result = new Bundle();
+            result.putInt(KEY_POSITION_CLICKED, position);
+            requireActivity().getSupportFragmentManager().setFragmentResult(MainNoteFragment.KEY_REQUEST_CLICKED_POSITION, result);
+        });
         mRecyclerView.setAdapter(mViewHolderAdapter);
 
         return mRecyclerView;
@@ -76,23 +93,11 @@ public class NoteListFragment extends Fragment implements DialogListener {
         if (item.getItemId() == R.id.note_list_item_menu_edit) {
             mListener.onContextEditMenuSelected();
         } else if (item.getItemId() == R.id.note_list_item_menu_delete) {
-            new DeleteFragment(this).show(requireActivity().getSupportFragmentManager(), null);
+            new DeleteFragment().show(requireActivity().getSupportFragmentManager(), null);
         } else {
             return super.onContextItemSelected(item);
         }
         return true;
-    }
-
-    @Override
-    public void onOkClicked() {
-        int position = mListener.onContextDeleteMenuSelected();
-        mViewHolderAdapter.notifyItemRemoved(position);
-        mViewHolderAdapter.notifyDataSetChanged();
-    }
-
-    @Override
-    public void onCancelClicked() {
-
     }
 
     public void setListener(NoteListFragmentListener listener) {
@@ -100,6 +105,8 @@ public class NoteListFragment extends Fragment implements DialogListener {
     }
 
     public void onViewHolderLongClick(int position) {
-        mListener.onLastSelectedPositionChanged(position);
+        Bundle result = new Bundle();
+        result.putInt(KEY_POSITION_LONG_CLICKED, position);
+        getParentFragmentManager().setFragmentResult(MainNoteFragment.KEY_REQUEST_LONG_CLICKED_POSITION, result);
     }
 }
