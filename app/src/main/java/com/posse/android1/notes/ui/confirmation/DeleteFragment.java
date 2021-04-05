@@ -27,8 +27,7 @@ public class DeleteFragment extends DialogFragment {
         MaterialButton btnYes = view.findViewById(R.id.confirm_button);
         btnYes.setOnClickListener(v -> {
             dismiss();
-            Bundle result = new Bundle();
-            requireActivity().getSupportFragmentManager().setFragmentResult(MainNoteFragment.KEY_REQUEST_DELETION_CONFIRMATION, result);
+            requireActivity().getSupportFragmentManager().setFragmentResult(MainNoteFragment.KEY_REQUEST_DELETION_CONFIRMATION, new Bundle());
         });
         MaterialButton btnNo = view.findViewById(R.id.cancel_button);
         btnNo.setOnClickListener(v -> dismiss());
@@ -38,12 +37,8 @@ public class DeleteFragment extends DialogFragment {
 
     @Override
     public void onResume() {
-        Window dialogWindow = null;
         try {
-            dialogWindow = Objects.requireNonNull(getDialog()).getWindow();
-        } catch (Exception ignored) {
-        }
-        if (dialogWindow != null) {
+            Window dialogWindow = Objects.requireNonNull(getDialog()).getWindow();
             int width = ViewGroup.LayoutParams.MATCH_PARENT;
             if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
                 DisplayMetrics displayMetrics = new DisplayMetrics();
@@ -53,6 +48,7 @@ public class DeleteFragment extends DialogFragment {
             }
             dialogWindow.setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT);
             dialogWindow.setBackgroundDrawableResource(android.R.color.transparent);
+        } catch (Exception ignored) {
         }
         super.onResume();
     }

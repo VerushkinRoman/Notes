@@ -12,11 +12,11 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.posse.android1.notes.MainActivity;
 import com.posse.android1.notes.R;
 import com.posse.android1.notes.adapter.ViewHolderAdapter;
@@ -30,14 +30,15 @@ public class NoteListFragment extends Fragment {
     public static final String KEY_POSITION_CLICKED = NoteListFragment.class.getCanonicalName() + "position";
     public static final String KEY_REQUEST_DELETE_POSITION = NoteListFragment.class.getCanonicalName() + "deletePosition";
     public static final String KEY_POSITION_LONG_CLICKED = NoteListFragment.class.getCanonicalName() + "positionLongClick";
-    private NoteListFragmentListener mListener;
     private ViewHolderAdapter mViewHolderAdapter;
     private RecyclerView mRecyclerView;
+    private FragmentManager mFragmentManager;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        requireActivity().getSupportFragmentManager().setFragmentResultListener(KEY_REQUEST_DELETE_POSITION, this, (requestKey, result) -> {
+        mFragmentManager = requireActivity().getSupportFragmentManager();
+        mFragmentManager.setFragmentResultListener(KEY_REQUEST_DELETE_POSITION, this, (requestKey, result) -> {
             int deletePosition = result.getInt(MainNoteFragment.KEY_DELETE_POSITION);
             mViewHolderAdapter.notifyItemRemoved(deletePosition);
             mViewHolderAdapter.notifyDataSetChanged();
@@ -49,9 +50,6 @@ public class NoteListFragment extends Fragment {
 
         mRecyclerView = (RecyclerView) inflater.inflate(R.layout.fragment_note_list, container, false);
         mRecyclerView.setHasFixedSize(true);
-
-        FloatingActionButton fab = requireActivity().findViewById(R.id.fab);
-        fab.setOnClickListener(v -> mListener.onAddButtonPressed());
 
         RecyclerView.LayoutManager layoutManager;
         boolean isLandscape = getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
@@ -66,7 +64,7 @@ public class NoteListFragment extends Fragment {
         mViewHolderAdapter.setOnClickListener((v, position) -> {
             Bundle result = new Bundle();
             result.putInt(KEY_POSITION_CLICKED, position);
-            requireActivity().getSupportFragmentManager().setFragmentResult(MainNoteFragment.KEY_REQUEST_CLICKED_POSITION, result);
+            mFragmentManager.setFragmentResult(MainNoteFragment.KEY_REQUEST_CLICKED_POSITION, result);
         });
         mRecyclerView.setAdapter(mViewHolderAdapter);
 
@@ -91,7 +89,7 @@ public class NoteListFragment extends Fragment {
     @Override
     public boolean onContextItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == R.id.note_list_item_menu_edit) {
-            mListener.onContextEditMenuSelected();
+            mFragmentManager.setFragmentResult(MainNoteFragment.KEY_REQUEST_EDIT_ACTION, new Bundle());
         } else if (item.getItemId() == R.id.note_list_item_menu_delete) {
             new DeleteFragment().show(requireActivity().getSupportFragmentManager(), null);
         } else {
@@ -100,13 +98,9 @@ public class NoteListFragment extends Fragment {
         return true;
     }
 
-    public void setListener(NoteListFragmentListener listener) {
-        mListener = listener;
-    }
-
     public void onViewHolderLongClick(int position) {
         Bundle result = new Bundle();
         result.putInt(KEY_POSITION_LONG_CLICKED, position);
-        getParentFragmentManager().setFragmentResult(MainNoteFragment.KEY_REQUEST_LONG_CLICKED_POSITION, result);
+        mFragmentManager.setFragmentResult(MainNoteFragment.KEY_REQUEST_LONG_CLICKED_POSITION, result);
     }
 }
