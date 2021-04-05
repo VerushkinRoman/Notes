@@ -30,7 +30,7 @@ class ViewHolder extends RecyclerView.ViewHolder {
         mDescription.setText(note.getDescription());
         mTimestamp.setText(note.getCreationDate());
         itemView.setOnLongClickListener((v) -> {
-            fragment.setLastSelectedPosition(getLayoutPosition());
+            fragment.onViewHolderLongClick(getLayoutPosition());
             return false;
         });
         fragment.registerForContextMenu(itemView);

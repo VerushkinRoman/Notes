@@ -21,7 +21,7 @@ import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
-import com.posse.android1.notes.ui.editor.EditorFragment;
+import com.posse.android1.notes.ui.notes.MainNoteFragment;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -32,6 +32,8 @@ public class MainActivity extends AppCompatActivity {
     public static final int NOTE_LIST_VIEW = 1;
     public static final int NOTE_VIEW = 2;
     public static final int EDITOR_VIEW = 3;
+    public static final int EMPTY_VIEW = 4;
+    public static final String KEY_REQUEST = MainActivity.class.getCanonicalName() + "request";
     private static final int BACK_BUTTON_EXIT_DELAY = 3000;
 
     private static final int BACK_BUTTON_ACCIDENT_DELAY = 500;
@@ -41,15 +43,17 @@ public class MainActivity extends AppCompatActivity {
     private long mLastTimePressed;
     private boolean mIsBackShown = false;
     private AppBarConfiguration mAppBarConfiguration;
-    private MenuItem.OnMenuItemClickListener mEditClickListener;
     private MenuItem mSwitchView;
     private MenuItem mEditBar;
     private boolean mIsLandscape;
+    private boolean mIsEmpty;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (savedInstanceState != null) mIsGridView = savedInstanceState.getBoolean(KEY_VIEW);
+        if (savedInstanceState != null) {
+            mIsGridView = savedInstanceState.getBoolean(KEY_VIEW);
+        }
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -62,6 +66,10 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
+        getSupportFragmentManager().setFragmentResultListener(KEY_REQUEST, this, (requestKey, bundle) -> {
+            int buttonsView = bundle.getInt(MainNoteFragment.KEY_BUTTONS_LOOK);
+            changeButtonsLook(buttonsView);
+        });
         mIsLandscape = getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
     }
 
@@ -70,9 +78,6 @@ public class MainActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.main, menu);
         mSwitchView = menu.findItem(R.id.action_switch_view);
         mEditBar = menu.findItem(R.id.edit_bar);
-        if (mIsLandscape) {
-            showSwitchView(false);
-        } else showEditBar(false);
         Drawable gridView = Objects.requireNonNull(ContextCompat.getDrawable(this, android.R.drawable.ic_dialog_dialer));
         Drawable lineView = Objects.requireNonNull(ContextCompat.getDrawable(this, android.R.drawable.ic_menu_sort_by_size));
         Drawable menuIcon = isGridView() ? gridView : lineView;
@@ -84,7 +89,6 @@ public class MainActivity extends AppCompatActivity {
             refreshFragment();
             return false;
         });
-        mEditBar.setOnMenuItemClickListener(mEditClickListener);
         return true;
     }
 
@@ -93,8 +97,9 @@ public class MainActivity extends AppCompatActivity {
         if (noteListFragment != null && noteListFragment.isVisible()) {
             FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
             fragmentTransaction.detach(noteListFragment);
+            fragmentTransaction.commitNow();
             fragmentTransaction.attach(noteListFragment);
-            fragmentTransaction.commit();
+            fragmentTransaction.commitNow();
         }
     }
 
@@ -115,58 +120,32 @@ public class MainActivity extends AppCompatActivity {
     public void onBackPressed() {
         FragmentManager fragmentManager = getSupportFragmentManager();
         Fragment noteListFragment = fragmentManager.findFragmentByTag("ListOfNotes");
-        Fragment noteFragment = fragmentManager.findFragmentByTag("Note");
-        EditorFragment editorFragment = (EditorFragment) fragmentManager.findFragmentByTag("Editor");
-        if (editorFragment != null && editorFragment.isVisible()) {
-            editorFragment.saveNote();
-            if (!mIsLandscape) showHideButtons(NOTE_LIST_VIEW);
-            mIsBackShown = false;
+        int view = mIsLandscape ? NOTE_VIEW : NOTE_LIST_VIEW;
+        if (mIsLandscape) {
+            fragmentManager.popBackStack("Note", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+            checkExit();
+        } else {
+            fragmentManager.popBackStack("ListOfNotes", FragmentManager.POP_BACK_STACK_INCLUSIVE);
         }
         if (noteListFragment != null && noteListFragment.isVisible()) {
-            int view = mIsLandscape ? NOTE_VIEW : NOTE_LIST_VIEW;
-            showHideButtons(view);
             checkExit();
         } else {
             super.onBackPressed();
             if (noteListFragment != null && noteListFragment.isVisible()) {
-                showHideButtons(NOTE_LIST_VIEW);
+                view = NOTE_LIST_VIEW;
             }
             mIsBackShown = false;
 
         }
-        if (noteFragment != null && noteFragment.isVisible()) {
-            showHideButtons(NOTE_VIEW);
-            mIsBackShown = false;
 
-        }
+        if (mIsEmpty) view = EMPTY_VIEW;
+        changeButtonsLook(view);
+
         mLastTimePressed = System.currentTimeMillis();
     }
 
-    public void showHideButtons(int view) {
-        switch (view) {
-            case NOTE_VIEW:
-                showFloatingButton(mIsLandscape);
-                showSwitchView(false);
-                showEditBar(true);
-                break;
-            case NOTE_LIST_VIEW:
-                showFloatingButton(true);
-                showSwitchView(true);
-                showEditBar(false);
-                break;
-            case EDITOR_VIEW:
-                showFloatingButton(false);
-                showEditBar(false);
-                showSwitchView(false);
-                break;
-            default:
-                throw new RuntimeException("Unexpected view: " + view);
-        }
-
-    }
-
     private void checkExit() {
-        Toast.makeText(this, "Press \"BACK\" again to exit", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, R.string.back_exit_confirmation, Toast.LENGTH_SHORT).show();
         if (System.currentTimeMillis() - mLastTimePressed < BACK_BUTTON_EXIT_DELAY
                 && System.currentTimeMillis() - mLastTimePressed > BACK_BUTTON_ACCIDENT_DELAY
                 && mIsBackShown) {
@@ -175,11 +154,7 @@ public class MainActivity extends AppCompatActivity {
         mIsBackShown = true;
     }
 
-    public void setMenuEditClickListener(MenuItem.OnMenuItemClickListener listener) {
-        mEditClickListener = listener;
-    }
-
-    public void showFloatingButton(boolean isVisible) {
+    private void showFloatingButton(boolean isVisible) {
         FloatingActionButton fab = findViewById(R.id.fab);
         if (fab != null) {
             if (isVisible) fab.show();
@@ -197,5 +172,34 @@ public class MainActivity extends AppCompatActivity {
 
     public boolean isGridView() {
         return mIsGridView;
+    }
+
+    public void changeButtonsLook(int lookVariant) {
+        switch (lookVariant) {
+            case NOTE_LIST_VIEW:
+                showFloatingButton(true);
+                showSwitchView(true);
+                showEditBar(false);
+                break;
+            case NOTE_VIEW:
+                showFloatingButton(mIsLandscape);
+                showSwitchView(false);
+                showEditBar(true);
+                mIsEmpty = false;
+                break;
+            case EDITOR_VIEW:
+                showFloatingButton(false);
+                showEditBar(false);
+                showSwitchView(false);
+                break;
+            case EMPTY_VIEW:
+                showFloatingButton(true);
+                showEditBar(false);
+                showSwitchView(!mIsLandscape);
+                mIsEmpty = true;
+                break;
+            default:
+                throw new RuntimeException("Unexpected view: " + lookVariant);
+        }
     }
 }
