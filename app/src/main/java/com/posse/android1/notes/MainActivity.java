@@ -28,9 +28,11 @@ import org.jetbrains.annotations.NotNull;
 public class MainActivity extends AppCompatActivity {
 
     private static final int BACK_BUTTON_EXIT_DELAY = 3000;
+
     private static final int BACK_BUTTON_ACCIDENT_DELAY = 500;
     private static final String KEY_VIEW = MainActivity.class.getCanonicalName() + "mIsGridView";
     private boolean mIsGridView = false;
+
     private long mLastTimePressed;
     private boolean mIsBackShown = false;
     private AppBarConfiguration mAppBarConfiguration;
@@ -117,7 +119,9 @@ public class MainActivity extends AppCompatActivity {
             super.onBackPressed();
             mIsBackShown = false;
         } else {
+
             checkExit();
+
         }
         mLastTimePressed = System.currentTimeMillis();
     }
