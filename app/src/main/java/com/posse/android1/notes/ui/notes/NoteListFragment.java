@@ -25,12 +25,14 @@ import com.posse.android1.notes.ui.confirmation.DeleteFragment;
 
 import org.jetbrains.annotations.NotNull;
 
+
 public class NoteListFragment extends Fragment {
 
     public static final String KEY_POSITION_CLICKED = NoteListFragment.class.getCanonicalName() + "position";
     public static final String KEY_REQUEST_DELETE_POSITION = NoteListFragment.class.getCanonicalName() + "deletePosition";
     public static final String KEY_POSITION_LONG_CLICKED = NoteListFragment.class.getCanonicalName() + "positionLongClick";
     private NoteListFragmentListener mListener;
+
     private ViewHolderAdapter mViewHolderAdapter;
     private RecyclerView mRecyclerView;
 
@@ -59,6 +61,7 @@ public class NoteListFragment extends Fragment {
             layoutManager = new GridLayoutManager(requireActivity(), 2);
         } else {
             layoutManager = new LinearLayoutManager(requireActivity());
+
         }
         mRecyclerView.setLayoutManager(layoutManager);
 

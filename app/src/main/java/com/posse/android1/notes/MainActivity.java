@@ -35,9 +35,11 @@ public class MainActivity extends AppCompatActivity {
     public static final int EMPTY_VIEW = 4;
     public static final String KEY_REQUEST = MainActivity.class.getCanonicalName() + "request";
     private static final int BACK_BUTTON_EXIT_DELAY = 3000;
+
     private static final int BACK_BUTTON_ACCIDENT_DELAY = 500;
     private static final String KEY_VIEW = MainActivity.class.getCanonicalName() + "mIsGridView";
     private boolean mIsGridView = false;
+
     private long mLastTimePressed;
     private boolean mIsBackShown = false;
     private AppBarConfiguration mAppBarConfiguration;
@@ -133,9 +135,12 @@ public class MainActivity extends AppCompatActivity {
                 view = NOTE_LIST_VIEW;
             }
             mIsBackShown = false;
+
         }
+
         if (mIsEmpty) view = EMPTY_VIEW;
         changeButtonsLook(view);
+
         mLastTimePressed = System.currentTimeMillis();
     }
 
