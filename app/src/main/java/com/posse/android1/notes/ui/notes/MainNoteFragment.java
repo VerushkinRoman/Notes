@@ -17,6 +17,7 @@ import androidx.fragment.app.FragmentContainerView;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.posse.android1.notes.MainActivity;
 import com.posse.android1.notes.PreferencesDataWorker;
 import com.posse.android1.notes.R;
@@ -27,11 +28,12 @@ import com.posse.android1.notes.ui.editor.EditorFragment;
 
 import java.util.Objects;
 
-public class MainNoteFragment extends Fragment implements NoteListFragmentListener {
+public class MainNoteFragment extends Fragment {
 
     public static final String KEY_REQUEST_CLICKED_POSITION = MainNoteFragment.class.getCanonicalName() + "requestClick";
     public static final String KEY_REQUEST_LONG_CLICKED_POSITION = MainNoteFragment.class.getCanonicalName() + "requestLongClick";
     public static final String KEY_REQUEST_DELETION_CONFIRMATION = MainNoteFragment.class.getCanonicalName() + "requestDelete";
+    public static final String KEY_REQUEST_EDIT_ACTION = MainNoteFragment.class.getCanonicalName() + "editSelected";
     public static final String KEY_REQUEST_NOTE_TO_SAVE = MainNoteFragment.class.getCanonicalName() + "requestNote";
     public static final String KEY_BUTTONS_LOOK = MainNoteFragment.class.getCanonicalName() + "buttonsLook";
     public static final String KEY_DELETE_POSITION = MainNoteFragment.class.getCanonicalName() + "deletePosition";
@@ -46,7 +48,6 @@ public class MainNoteFragment extends Fragment implements NoteListFragmentListen
     private int mLastSelectedPosition = 0;
     private int mButtonsView;
     private FragmentManager mFragmentManager;
-    private EditorFragment mEditorFragment;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -59,7 +60,6 @@ public class MainNoteFragment extends Fragment implements NoteListFragmentListen
         if (savedInstanceState != null) {
             mLastSelectedPosition = savedInstanceState.getInt(KEY_LAST_SELECTED);
             mIsNewNote = savedInstanceState.getBoolean(KEY_NEW_NOTE);
-            mEditorFragment = (EditorFragment) mFragmentManager.findFragmentByTag("Editor");
         }
         setResultListeners();
     }
@@ -75,11 +75,16 @@ public class MainNoteFragment extends Fragment implements NoteListFragmentListen
             deleteNote(mLastSelectedPosition);
             Bundle result = new Bundle();
             result.putInt(KEY_DELETE_POSITION, mLastSelectedPosition);
-            requireActivity().getSupportFragmentManager().setFragmentResult(NoteListFragment.KEY_REQUEST_DELETE_POSITION, result);
+            mFragmentManager.setFragmentResult(NoteListFragment.KEY_REQUEST_DELETE_POSITION, result);
         });
         mFragmentManager.setFragmentResultListener(KEY_REQUEST_NOTE_TO_SAVE, this, (requestKey, bundle) -> {
             Note note = bundle.getParcelable(EditorFragment.KEY_NOTE);
             saveNote(note);
+        });
+        mFragmentManager.setFragmentResultListener(KEY_REQUEST_EDIT_ACTION, this, (requestKey, bundle) -> {
+            if (mLastSelectedPosition != -1) {
+                showEditor(mLastSelectedPosition);
+            }
         });
     }
 
@@ -87,6 +92,11 @@ public class MainNoteFragment extends Fragment implements NoteListFragmentListen
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         setHasOptionsMenu(true);
         View view = inflater.inflate(R.layout.fragment_main_notes, container, false);
+        FloatingActionButton fab = view.findViewById(R.id.fab);
+        fab.setOnClickListener(v -> {
+            showEditor(-1);
+            mIsNewNote = true;
+        });
         if (!mIsLandscape) {
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 0.0f);
             FragmentContainerView fragmentView = view.findViewById(R.id.note_container);
@@ -103,7 +113,6 @@ public class MainNoteFragment extends Fragment implements NoteListFragmentListen
         } else {
             mNoteListFragment = new NoteListFragment();
         }
-        Objects.requireNonNull(mNoteListFragment).setListener(this);
         replaceFragments(mNoteListFragment);
         if (mNoteSource.getItemsCount() == 0) return;
         if (mIsLandscape) {
@@ -133,35 +142,31 @@ public class MainNoteFragment extends Fragment implements NoteListFragmentListen
     private void setButtonsView(int view) {
         Bundle result = new Bundle();
         result.putInt(KEY_BUTTONS_LOOK, view);
-        mFragmentManager.setFragmentResult(MainActivity.KEY_REQUEST, result);
+        mFragmentManager.setFragmentResult(MainActivity.KEY_REQUEST_BUTTONS_VIEW, result);
     }
 
     private void showNote(Note note) {
         replaceFragments(NoteFragment.newInstance(note));
     }
 
-    @Override
-    public void onAddButtonPressed() {
-        showEditor(-1);
-        mIsNewNote = true;
-    }
-
     private void replaceFragments(Fragment newFragment) {
         FragmentTransaction transaction = mFragmentManager.beginTransaction();
         mButtonsView = MainActivity.NOTE_VIEW;
         int fragmentId = R.id.note_list_container;
+        String backStackTag = null;
         String tag = "Note";
         if (newFragment instanceof NoteListFragment) {
             tag = "ListOfNotes";
+            backStackTag = tag;
             mButtonsView = (mNoteSource.getItemsCount() == 0) ? MainActivity.EMPTY_VIEW : MainActivity.NOTE_LIST_VIEW;
         } else if (mIsLandscape) {
             fragmentId = R.id.note_container;
             transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
         }
-        setButtonsView(mButtonsView);
-        transaction.addToBackStack(null);
+        transaction.addToBackStack(backStackTag);
         transaction.replace(fragmentId, newFragment, tag);
         transaction.commit();
+        setButtonsView(mButtonsView);
     }
 
     private void deleteNote(int idx) {
@@ -177,7 +182,7 @@ public class MainNoteFragment extends Fragment implements NoteListFragmentListen
                 } else {
                     FragmentTransaction fragmentTransaction = mFragmentManager.beginTransaction();
                     Fragment fragment = mFragmentManager.findFragmentByTag("Note");
-                    fragmentTransaction.detach(Objects.requireNonNull(fragment));
+                    fragmentTransaction.remove(Objects.requireNonNull(fragment));
                     fragmentTransaction.commit();
                     mLastSelectedPosition = -1;
                     setButtonsView(MainActivity.EMPTY_VIEW);
@@ -186,16 +191,8 @@ public class MainNoteFragment extends Fragment implements NoteListFragmentListen
         }
     }
 
-    @Override
-    public void onContextEditMenuSelected() {
-        if (mLastSelectedPosition != -1) {
-            showEditor(mLastSelectedPosition);
-        }
-    }
-
     private void showEditor(int lastSelectedPosition) {
-        mEditorFragment = new EditorFragment(lastSelectedPosition, mNoteSource.getItemsCount());
-        mEditorFragment.show(mFragmentManager, "Editor");
+        new EditorFragment(lastSelectedPosition, mNoteSource.getItemsCount()).show(mFragmentManager, "Editor");
     }
 
     public void saveNote(Note note) {
@@ -209,10 +206,7 @@ public class MainNoteFragment extends Fragment implements NoteListFragmentListen
             } else mButtonsView = MainActivity.NOTE_VIEW;
             mNoteListFragment.onDataChanged(note.getNoteIndex(), mIsNewNote);
             mIsNewNote = false;
-            if (mIsLandscape) {
-                showNote(note);
-            } else{
-            }
+            showNote(note);
         }
         if (mIsLandscape) {
             mButtonsView = MainActivity.NOTE_VIEW;

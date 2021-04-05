@@ -10,7 +10,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.customview.widget.Openable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -31,9 +31,8 @@ public class MainActivity extends AppCompatActivity {
 
     public static final int NOTE_LIST_VIEW = 1;
     public static final int NOTE_VIEW = 2;
-    public static final int EDITOR_VIEW = 3;
-    public static final int EMPTY_VIEW = 4;
-    public static final String KEY_REQUEST = MainActivity.class.getCanonicalName() + "request";
+    public static final int EMPTY_VIEW = 3;
+    public static final String KEY_REQUEST_BUTTONS_VIEW = MainActivity.class.getCanonicalName() + "request";
     private static final int BACK_BUTTON_EXIT_DELAY = 3000;
 
     private static final int BACK_BUTTON_ACCIDENT_DELAY = 500;
@@ -57,16 +56,16 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        Openable drawer = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.nav_view);
         mAppBarConfiguration = new AppBarConfiguration.Builder(
                 R.id.nav_notes, R.id.nav_settings)
-                .setDrawerLayout(drawer)
+                .setOpenableLayout(drawer)
                 .build();
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
-        getSupportFragmentManager().setFragmentResultListener(KEY_REQUEST, this, (requestKey, bundle) -> {
+        getSupportFragmentManager().setFragmentResultListener(KEY_REQUEST_BUTTONS_VIEW, this, (requestKey, bundle) -> {
             int buttonsView = bundle.getInt(MainNoteFragment.KEY_BUTTONS_LOOK);
             changeButtonsLook(buttonsView);
         });
@@ -106,8 +105,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onSupportNavigateUp() {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
-        return NavigationUI.navigateUp(navController, mAppBarConfiguration)
-                || super.onSupportNavigateUp();
+        return NavigationUI.navigateUp(navController, mAppBarConfiguration) || super.onSupportNavigateUp();
     }
 
     @Override
@@ -118,22 +116,15 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
+        int view = mIsLandscape ? NOTE_VIEW : NOTE_LIST_VIEW;
         FragmentManager fragmentManager = getSupportFragmentManager();
         Fragment noteListFragment = fragmentManager.findFragmentByTag("ListOfNotes");
-        int view = mIsLandscape ? NOTE_VIEW : NOTE_LIST_VIEW;
-        if (mIsLandscape) {
-            fragmentManager.popBackStack("Note", FragmentManager.POP_BACK_STACK_INCLUSIVE);
-            checkExit();
-        } else {
-            fragmentManager.popBackStack("ListOfNotes", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        if (!mIsLandscape && noteListFragment != null && !noteListFragment.isVisible()) {
+            fragmentManager.popBackStack("ListOfNotes", 0);
         }
         if (noteListFragment != null && noteListFragment.isVisible()) {
             checkExit();
         } else {
-            super.onBackPressed();
-            if (noteListFragment != null && noteListFragment.isVisible()) {
-                view = NOTE_LIST_VIEW;
-            }
             mIsBackShown = false;
 
         }
@@ -186,11 +177,6 @@ public class MainActivity extends AppCompatActivity {
                 showSwitchView(false);
                 showEditBar(true);
                 mIsEmpty = false;
-                break;
-            case EDITOR_VIEW:
-                showFloatingButton(false);
-                showEditBar(false);
-                showSwitchView(false);
                 break;
             case EMPTY_VIEW:
                 showFloatingButton(true);
