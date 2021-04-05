@@ -17,9 +17,9 @@ public class Note implements Parcelable {
     };
 
     private final int mNoteIndex;
-    private final String mName;
-    private final String mDescription;
-    private final String mCreationDate;
+    private String mName;
+    private String mDescription;
+    private String mCreationDate;
 
     public Note(int noteIndex, String name, String description, String creationDate) {
         mNoteIndex = noteIndex;
@@ -43,12 +43,24 @@ public class Note implements Parcelable {
         return mName;
     }
 
+    public void setName(String name) {
+        this.mName = name;
+    }
+
     public String getDescription() {
         return mDescription;
     }
 
+    public void setDescription(String description) {
+        this.mDescription = description;
+    }
+
     public String getCreationDate() {
         return mCreationDate;
+    }
+
+    public void setCreationDate(String creationDate) {
+        this.mCreationDate = creationDate;
     }
 
     @Override

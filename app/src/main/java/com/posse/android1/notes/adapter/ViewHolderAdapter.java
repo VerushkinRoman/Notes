@@ -10,17 +10,20 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.posse.android1.notes.R;
 import com.posse.android1.notes.note.Note;
 import com.posse.android1.notes.note.NoteSource;
+import com.posse.android1.notes.ui.notes.NoteListFragment;
 
 import org.jetbrains.annotations.NotNull;
 
 public class ViewHolderAdapter extends RecyclerView.Adapter<ViewHolder> {
+    private final NoteListFragment mFragment;
     private final LayoutInflater mInflater;
     private final NoteSource mDataSource;
 
     private OnClickListener mOnClickListener;
 
-    public ViewHolderAdapter(LayoutInflater inflater, NoteSource dataSource) {
-        mInflater = inflater;
+    public ViewHolderAdapter(NoteListFragment fragment, NoteSource dataSource) {
+        mFragment = fragment;
+        mInflater = fragment.getLayoutInflater();
         mDataSource = dataSource;
     }
 
@@ -38,12 +41,18 @@ public class ViewHolderAdapter extends RecyclerView.Adapter<ViewHolder> {
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Note note = mDataSource.getItemAt(position);
-        holder.fillCard(note);
+        holder.fillCard(mFragment, note);
         holder.itemView.setOnClickListener((v) -> {
             if (mOnClickListener != null) {
                 mOnClickListener.onItemClick(v, position);
             }
         });
+    }
+
+    @Override
+    public void onViewRecycled(@NonNull ViewHolder holder) {
+        super.onViewRecycled(holder);
+        holder.clear(mFragment);
     }
 
     @Override

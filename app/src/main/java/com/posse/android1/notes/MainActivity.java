@@ -5,6 +5,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -20,13 +21,17 @@ import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
-import com.google.android.material.snackbar.Snackbar;
-import com.posse.android1.notes.ui.notes.NoteListFragment;
+import com.posse.android1.notes.ui.editor.EditorFragment;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
+
 public class MainActivity extends AppCompatActivity {
 
+    public static final int NOTE_LIST_VIEW = 1;
+    public static final int NOTE_VIEW = 2;
+    public static final int EDITOR_VIEW = 3;
     private static final int BACK_BUTTON_EXIT_DELAY = 3000;
 
     private static final int BACK_BUTTON_ACCIDENT_DELAY = 500;
@@ -36,7 +41,9 @@ public class MainActivity extends AppCompatActivity {
     private long mLastTimePressed;
     private boolean mIsBackShown = false;
     private AppBarConfiguration mAppBarConfiguration;
+    private MenuItem.OnMenuItemClickListener mEditClickListener;
     private MenuItem mSwitchView;
+    private MenuItem mEditBar;
     private boolean mIsLandscape;
 
     @Override
@@ -46,9 +53,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(view -> Snackbar.make(view, "Add a new note Action", Snackbar.LENGTH_LONG)
-                .setAction("Action", null).show());
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.nav_view);
         mAppBarConfiguration = new AppBarConfiguration.Builder(
@@ -65,9 +69,12 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
         mSwitchView = menu.findItem(R.id.action_switch_view);
-        if (mIsLandscape) mSwitchView.setVisible(false);
-        Drawable gridView = ContextCompat.getDrawable(this, android.R.drawable.ic_dialog_dialer);
-        Drawable lineView = ContextCompat.getDrawable(this, android.R.drawable.ic_menu_sort_by_size);
+        mEditBar = menu.findItem(R.id.edit_bar);
+        if (mIsLandscape) {
+            showSwitchView(false);
+        } else showEditBar(false);
+        Drawable gridView = Objects.requireNonNull(ContextCompat.getDrawable(this, android.R.drawable.ic_dialog_dialer));
+        Drawable lineView = Objects.requireNonNull(ContextCompat.getDrawable(this, android.R.drawable.ic_menu_sort_by_size));
         Drawable menuIcon = isGridView() ? gridView : lineView;
         mSwitchView.setIcon(menuIcon);
         mSwitchView.setOnMenuItemClickListener(item -> {
@@ -77,6 +84,7 @@ public class MainActivity extends AppCompatActivity {
             refreshFragment();
             return false;
         });
+        mEditBar.setOnMenuItemClickListener(mEditClickListener);
         return true;
     }
 
@@ -106,28 +114,59 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         FragmentManager fragmentManager = getSupportFragmentManager();
-        if (!mIsLandscape) {
-            NoteListFragment noteListFragment = (NoteListFragment) fragmentManager.findFragmentByTag("ListOfNotes");
-            mSwitchView.setVisible(true);
-            if (noteListFragment != null && noteListFragment.isVisible()) {
-                checkExit();
-            } else {
-                super.onBackPressed();
-                mIsBackShown = false;
-            }
-        } else if (fragmentManager.getBackStackEntryCount() > 1) {
-            super.onBackPressed();
+        Fragment noteListFragment = fragmentManager.findFragmentByTag("ListOfNotes");
+        Fragment noteFragment = fragmentManager.findFragmentByTag("Note");
+        EditorFragment editorFragment = (EditorFragment) fragmentManager.findFragmentByTag("Editor");
+        if (editorFragment != null && editorFragment.isVisible()) {
+            editorFragment.saveNote();
+            if (!mIsLandscape) showHideButtons(NOTE_LIST_VIEW);
             mIsBackShown = false;
-        } else {
-
+        }
+        if (noteListFragment != null && noteListFragment.isVisible()) {
+            int view = mIsLandscape ? NOTE_VIEW : NOTE_LIST_VIEW;
+            showHideButtons(view);
             checkExit();
+        } else {
+            super.onBackPressed();
+            if (noteListFragment != null && noteListFragment.isVisible()) {
+                showHideButtons(NOTE_LIST_VIEW);
+            }
+            mIsBackShown = false;
+
+        }
+        if (noteFragment != null && noteFragment.isVisible()) {
+            showHideButtons(NOTE_VIEW);
+            mIsBackShown = false;
 
         }
         mLastTimePressed = System.currentTimeMillis();
     }
 
+    public void showHideButtons(int view) {
+        switch (view) {
+            case NOTE_VIEW:
+                showFloatingButton(mIsLandscape);
+                showSwitchView(false);
+                showEditBar(true);
+                break;
+            case NOTE_LIST_VIEW:
+                showFloatingButton(true);
+                showSwitchView(true);
+                showEditBar(false);
+                break;
+            case EDITOR_VIEW:
+                showFloatingButton(false);
+                showEditBar(false);
+                showSwitchView(false);
+                break;
+            default:
+                throw new RuntimeException("Unexpected view: " + view);
+        }
+
+    }
+
     private void checkExit() {
-        Snackbar.make(findViewById(R.id.note_list_container), "Press \"BACK\" again to exit", Snackbar.LENGTH_LONG).show();
+        Toast.makeText(this, "Press \"BACK\" again to exit", Toast.LENGTH_SHORT).show();
         if (System.currentTimeMillis() - mLastTimePressed < BACK_BUTTON_EXIT_DELAY
                 && System.currentTimeMillis() - mLastTimePressed > BACK_BUTTON_ACCIDENT_DELAY
                 && mIsBackShown) {
@@ -136,8 +175,24 @@ public class MainActivity extends AppCompatActivity {
         mIsBackShown = true;
     }
 
-    public MenuItem getSwitchView() {
-        return mSwitchView;
+    public void setMenuEditClickListener(MenuItem.OnMenuItemClickListener listener) {
+        mEditClickListener = listener;
+    }
+
+    public void showFloatingButton(boolean isVisible) {
+        FloatingActionButton fab = findViewById(R.id.fab);
+        if (fab != null) {
+            if (isVisible) fab.show();
+            else fab.hide();
+        }
+    }
+
+    private void showSwitchView(boolean isVisible) {
+        if (mSwitchView != null) mSwitchView.setVisible(isVisible);
+    }
+
+    private void showEditBar(boolean isVisible) {
+        if (mEditBar != null) mEditBar.setVisible(isVisible);
     }
 
     public boolean isGridView() {
