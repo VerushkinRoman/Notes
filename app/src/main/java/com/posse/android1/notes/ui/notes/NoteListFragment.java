@@ -2,78 +2,112 @@ package com.posse.android1.notes.ui.notes;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.view.KeyEvent;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.snackbar.Snackbar;
-import com.google.android.material.textview.MaterialTextView;
+import com.posse.android1.notes.MainActivity;
 import com.posse.android1.notes.R;
+import com.posse.android1.notes.adapter.ViewHolderAdapter;
+import com.posse.android1.notes.note.Note;
+import com.posse.android1.notes.note.NoteSourceImpl;
 
-public class NoteListFragment extends Fragment {
+import org.jetbrains.annotations.NotNull;
+
+
+public class NoteListFragment extends Fragment implements Parcelable {
+
+
+    public static final Creator<NoteListFragment> CREATOR = new Creator<NoteListFragment>() {
+        @Override
+        public NoteListFragment createFromParcel(Parcel in) {
+            return new NoteListFragment(in);
+        }
+
+        @Override
+        public NoteListFragment[] newArray(int size) {
+            return new NoteListFragment[size];
+        }
+    };
 
     private boolean mIsLandscape;
-    private LinearLayout mLinearLayout;
-    private int mCurrentNote = -1;
+    private Note mCurrentNote;
+    private NoteSourceImpl mNoteSourceImpl;
+
+    public NoteListFragment() {
+    }
+
+    protected NoteListFragment(Parcel in) {
+        mIsLandscape = in.readByte() != 0;
+    }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        mLinearLayout = new LinearLayout(requireContext());
-        mLinearLayout.setOrientation(LinearLayout.VERTICAL);
-        String[] notes = getResources().getStringArray(R.array.notes_list);
-        for (int i = 0; i < notes.length; i++) {
-            String note = notes[i];
-            MaterialTextView tv = new MaterialTextView(requireContext());
-            tv.setText(note);
-            tv.setTextSize(30);
-            final int finalI = i;
-            tv.setOnClickListener(v -> {
-                mCurrentNote = finalI;
-                showNote(mCurrentNote);
-            });
-            mLinearLayout.addView(tv);
+    public View onCreateView(@NotNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        mIsLandscape = getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
+
+        RecyclerView recyclerView = (RecyclerView) inflater.inflate(R.layout.fragment_note_list, container, false);
+        recyclerView.setHasFixedSize(true);
+
+        RecyclerView.LayoutManager layoutManager;
+        if (((MainActivity) getActivity()).isGridView() && !mIsLandscape) {
+            layoutManager = new GridLayoutManager(requireActivity(), 2);
+        } else {
+            layoutManager = new LinearLayoutManager(requireActivity());
+
         }
-        return mLinearLayout;
+        recyclerView.setLayoutManager(layoutManager);
+
+        mNoteSourceImpl = new NoteSourceImpl(getResources());
+        ViewHolderAdapter viewHolderAdapter = new ViewHolderAdapter(inflater, mNoteSourceImpl);
+        viewHolderAdapter.setOnClickListener((v, position) -> {
+            mCurrentNote = mNoteSourceImpl.getItemAt(position);
+            showNote(mCurrentNote);
+        });
+        recyclerView.setAdapter(viewHolderAdapter);
+
+        return recyclerView;
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        mIsLandscape = getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
-        if (savedInstanceState != null) {
-            mCurrentNote = savedInstanceState.getInt(NoteFragment.NOTE_INDEX, -1);
-        } else mCurrentNote = 0;
-        if (mIsLandscape) {
-            showNote(mCurrentNote);
-        }
+        int idx = (mCurrentNote == null) ? 0 : mCurrentNote.getNoteIndex();
+        mCurrentNote = mNoteSourceImpl.getItemAt(idx);
+        if (mIsLandscape) showNote(mCurrentNote);
     }
 
-
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle bundle) {
-        super.onSaveInstanceState(bundle);
-        bundle.putInt(NoteFragment.NOTE_INDEX, mCurrentNote);
-    }
-
-    private void showNote(int currentNote) {
+    private void showNote(Note currentNote) {
         FragmentManager fragmentManager = requireActivity().getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.addToBackStack(null);
         if (mIsLandscape) {
             fragmentTransaction.replace(R.id.note_container, NoteFragment.newInstance(currentNote));
+            fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
         } else {
             fragmentTransaction.replace(R.id.note_list_container, NoteFragment.newInstance(currentNote));
+            ((MainActivity) getActivity()).getSwitchView().setVisible(false);
         }
-        fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
         fragmentTransaction.commit();
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeByte((byte) (mIsLandscape ? 1 : 0));
     }
 }
