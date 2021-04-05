@@ -35,9 +35,12 @@ import com.posse.android1.notes.ui.editor.EditorListener;
 
 import org.jetbrains.annotations.NotNull;
 
+
 import static android.content.Context.INPUT_METHOD_SERVICE;
 
 public class NoteListFragment extends Fragment implements Parcelable, EditorListener {
+
+
 
     public static final Creator<NoteListFragment> CREATOR = new Creator<NoteListFragment>() {
         @Override
@@ -68,7 +71,9 @@ public class NoteListFragment extends Fragment implements Parcelable, EditorList
     @Override
     public View onCreateView(@NotNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mIsLandscape = getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
+
         mPrefsData = new PreferencesDataWorker(requireActivity());
+
         RecyclerView recyclerView = (RecyclerView) inflater.inflate(R.layout.fragment_note_list, container, false);
         recyclerView.setHasFixedSize(true);
 
@@ -88,6 +93,7 @@ public class NoteListFragment extends Fragment implements Parcelable, EditorList
             layoutManager = new GridLayoutManager(requireActivity(), 2);
         } else {
             layoutManager = new LinearLayoutManager(requireActivity());
+
         }
         recyclerView.setLayoutManager(layoutManager);
 

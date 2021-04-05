@@ -33,9 +33,11 @@ public class MainActivity extends AppCompatActivity {
     public static final int NOTE_VIEW = 2;
     public static final int EDITOR_VIEW = 3;
     private static final int BACK_BUTTON_EXIT_DELAY = 3000;
+
     private static final int BACK_BUTTON_ACCIDENT_DELAY = 500;
     private static final String KEY_VIEW = MainActivity.class.getCanonicalName() + "mIsGridView";
     private boolean mIsGridView = false;
+
     private long mLastTimePressed;
     private boolean mIsBackShown = false;
     private AppBarConfiguration mAppBarConfiguration;
@@ -130,10 +132,12 @@ public class MainActivity extends AppCompatActivity {
                 showHideButtons(NOTE_LIST_VIEW);
             }
             mIsBackShown = false;
+
         }
         if (noteFragment != null && noteFragment.isVisible()) {
             showHideButtons(NOTE_VIEW);
             mIsBackShown = false;
+
         }
         mLastTimePressed = System.currentTimeMillis();
     }
