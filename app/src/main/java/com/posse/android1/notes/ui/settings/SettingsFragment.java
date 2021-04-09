@@ -17,19 +17,9 @@ public class SettingsFragment extends Fragment {
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        ((MainActivity) requireActivity()).changeButtonsLook(MainActivity.EMPTY_VIEW);
         View root = inflater.inflate(R.layout.fragment_settings, container, false);
         final TextView textView = root.findViewById(R.id.text_settings);
         textView.setText(getString(R.string.settings_fragment_message));
         return root;
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        int view = (requireActivity().getResources().getConfiguration().orientation
-                == Configuration.ORIENTATION_LANDSCAPE)
-                ? MainActivity.NOTE_VIEW : MainActivity.NOTE_LIST_VIEW;
-        ((MainActivity) requireActivity()).changeButtonsLook(view);
     }
 }

@@ -4,13 +4,16 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import com.posse.android1.notes.note.Note;
-import com.posse.android1.notes.note.NoteSourceImpl;
 
 public class PreferencesDataWorker {
-    private static final String PREFERENCES_KEY = NoteSourceImpl.class.getCanonicalName() + "preferences";
-    private static final String PREFERENCES_KEY_NAMES = NoteSourceImpl.class.getCanonicalName() + "names";
-    private static final String PREFERENCES_KEY_NOTES = NoteSourceImpl.class.getCanonicalName() + "notes";
-    private static final String PREFERENCES_KEY_DATES = NoteSourceImpl.class.getCanonicalName() + "dates";
+    private static final String PREFERENCES_KEY = PreferencesDataWorker.class.getCanonicalName() + "_preferences";
+    private static final String PREFERENCES_KEY_NAMES = PreferencesDataWorker.class.getCanonicalName() + "_names";
+    private static final String PREFERENCES_KEY_NOTES = PreferencesDataWorker.class.getCanonicalName() + "_notes";
+    private static final String PREFERENCES_KEY_DATES = PreferencesDataWorker.class.getCanonicalName() + "_dates";
+    private static final String PREFERENCES_KEY_OPENED_EDITOR = PreferencesDataWorker.class.getCanonicalName() + "_openedEditor";
+    private static final String PREFERENCES_KEY_LAST_INDEX = PreferencesDataWorker.class.getCanonicalName() + "_lastIndex";
+    private static final String PREFERENCES_KEY_GRID_VIEW = PreferencesDataWorker.class.getCanonicalName() + "_gridView";
+
 
     private final SharedPreferences mPrefs;
     private SharedPreferences.Editor mEditor;
@@ -54,6 +57,31 @@ public class PreferencesDataWorker {
     public void writeNotesQuantity(int size) {
         mEditor = mPrefs.edit();
         mEditor.putInt(PREFERENCES_KEY + "_size", size);
+        mEditor.apply();
+    }
+
+    public boolean isEditorOpened() {
+        return mPrefs.getBoolean(PREFERENCES_KEY_OPENED_EDITOR, false);
+    }
+
+    public int getLastIndex() {
+        return mPrefs.getInt(PREFERENCES_KEY_LAST_INDEX, -1);
+    }
+
+    public void setEditorOpened(boolean isOpened, int lastIndex) {
+        mEditor = mPrefs.edit();
+        mEditor.putBoolean(PREFERENCES_KEY_OPENED_EDITOR, isOpened);
+        mEditor.putInt(PREFERENCES_KEY_LAST_INDEX, lastIndex);
+        mEditor.apply();
+    }
+
+    public boolean isGridView() {
+        return mPrefs.getBoolean(PREFERENCES_KEY_GRID_VIEW, false);
+    }
+
+    public void setGridView(boolean isGridView) {
+        mEditor = mPrefs.edit();
+        mEditor.putBoolean(PREFERENCES_KEY_GRID_VIEW, isGridView);
         mEditor.apply();
     }
 }

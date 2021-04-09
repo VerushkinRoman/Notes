@@ -15,7 +15,7 @@ import com.posse.android1.notes.note.Note;
 
 public class NoteFragment extends Fragment {
 
-    public static final String KEY_NOTE_INDEX = NoteFragment.class.getCanonicalName() + "NoteIndex";
+    public static final String KEY_NOTE_INDEX = NoteFragment.class.getCanonicalName() + "_NoteIndex";
     private Note mNote;
 
     public NoteFragment() {
