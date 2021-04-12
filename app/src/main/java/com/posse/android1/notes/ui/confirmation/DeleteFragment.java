@@ -19,11 +19,34 @@ import java.util.Objects;
 
 public class DeleteFragment extends DialogFragment {
 
+    private static final String KEY_DELETE = DeleteFragment.class.getCanonicalName() + "_";
+    private boolean mIsCurrentNote;
+
+    public DeleteFragment() {
+    }
+
+    public static DeleteFragment newInstance(boolean isCurrentNote) {
+        DeleteFragment fragment = new DeleteFragment();
+        Bundle args = new Bundle();
+        args.putBoolean(KEY_DELETE, isCurrentNote);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            mIsCurrentNote = getArguments().getBoolean(KEY_DELETE);
+        }
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_delete, container, false);
-        TextView text = view.findViewById(R.id.dialog_caption);
-        text.setText(R.string.delete_confirmation);
+        TextView dialog = view.findViewById(R.id.dialog_caption);
+        int textResource = mIsCurrentNote ? R.string.delete_current_confirmation : R.string.delete_confirmation;
+        dialog.setText(textResource);
         MaterialButton btnYes = view.findViewById(R.id.confirm_button);
         btnYes.setOnClickListener(v -> {
             dismiss();

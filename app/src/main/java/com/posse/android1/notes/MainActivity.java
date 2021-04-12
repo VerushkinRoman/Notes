@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
             boolean isLandscape = getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
             int view = isLandscape ? MainNoteFragment.NOTE_VIEW : MainNoteFragment.NOTE_LIST_VIEW;
             FragmentManager fragmentManager = getSupportFragmentManager();
-            Fragment noteListFragment = fragmentManager.findFragmentByTag("ListOfNotes");
+            Fragment noteListFragment = fragmentManager.findFragmentByTag(MainNoteFragment.TAG_NOTES_LIST);
             if (noteListFragment != null && noteListFragment.isVisible()) {
                 checkExit();
             } else {
@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
             }
             Bundle result = new Bundle();
             result.putInt(KEY_BUTTONS_VIEW, view);
-            getSupportFragmentManager().setFragmentResult(MainNoteFragment.KEY_REQUEST_BUTTONS_VIEW, result);
+            getSupportFragmentManager().setFragmentResult(MainNoteFragment.KEY_REQUEST_BACK_PRESSED, result);
             mLastTimePressed = System.currentTimeMillis();
         }
     }

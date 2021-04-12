@@ -2,10 +2,7 @@ package com.posse.android1.notes.ui.notes;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.view.ContextMenu;
 import android.view.LayoutInflater;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -20,15 +17,17 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.posse.android1.notes.R;
 import com.posse.android1.notes.adapter.ViewHolderAdapter;
 import com.posse.android1.notes.note.NoteSourceImpl;
-import com.posse.android1.notes.ui.confirmation.DeleteFragment;
 
 import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
 
 public class NoteListFragment extends Fragment {
 
     public static final String KEY_POSITION_CLICKED = NoteListFragment.class.getCanonicalName() + "_position";
     public static final String KEY_REQUEST_DELETE_POSITION = NoteListFragment.class.getCanonicalName() + "_deletePosition";
     public static final String KEY_POSITION_LONG_CLICKED = NoteListFragment.class.getCanonicalName() + "_positionLongClick";
+    public static final int ALL_ITEMS_CHANGED = -1;
     private static final String KEY_GRID_VIEW = NoteListFragment.class.getCanonicalName() + "_mIsGridView";
     private ViewHolderAdapter mViewHolderAdapter;
     private RecyclerView mRecyclerView;
@@ -50,8 +49,10 @@ public class NoteListFragment extends Fragment {
         }
         mFragmentManager = requireActivity().getSupportFragmentManager();
         mFragmentManager.setFragmentResultListener(KEY_REQUEST_DELETE_POSITION, this, (requestKey, result) -> {
-            int deletePosition = result.getInt(MainNoteFragment.KEY_DELETE_POSITION);
-            mViewHolderAdapter.notifyItemRemoved(deletePosition);
+            ArrayList<Integer> positionsToDelete = result.getIntegerArrayList(MainNoteFragment.KEY_DELETE_POSITION);
+            for (int i = 0; i < positionsToDelete.size(); i++) {
+                mViewHolderAdapter.notifyItemRemoved(positionsToDelete.get(i));
+            }
             mViewHolderAdapter.notifyDataSetChanged();
         });
     }
@@ -84,36 +85,20 @@ public class NoteListFragment extends Fragment {
     }
 
     @Override
-    public void onCreateContextMenu(@NonNull ContextMenu menu, @NonNull View v,
-                                    @Nullable ContextMenu.ContextMenuInfo menuInfo) {
-        super.onCreateContextMenu(menu, v, menuInfo);
-        MenuInflater menuInflater = requireActivity().getMenuInflater();
-        menuInflater.inflate(R.menu.note_list_menu, menu);
-    }
-
-    @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putBoolean(KEY_GRID_VIEW, mIsGridView);
     }
 
     public void onDataChanged(int idx, boolean isNewNote) {
-        if (isNewNote) {
-            mViewHolderAdapter.notifyItemInserted(idx);
-        } else mViewHolderAdapter.notifyItemChanged(idx);
-        mRecyclerView.scrollToPosition(idx);
-    }
-
-    @Override
-    public boolean onContextItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.note_list_item_menu_edit) {
-            mFragmentManager.setFragmentResult(MainNoteFragment.KEY_REQUEST_EDIT_ACTION, new Bundle());
-        } else if (item.getItemId() == R.id.note_list_item_menu_delete) {
-            new DeleteFragment().show(mFragmentManager, null);
+        if (idx == ALL_ITEMS_CHANGED) {
+            mViewHolderAdapter.notifyDataSetChanged();
         } else {
-            return super.onContextItemSelected(item);
+            if (isNewNote) {
+                mViewHolderAdapter.notifyItemInserted(idx);
+            } else mViewHolderAdapter.notifyItemChanged(idx);
+            mRecyclerView.scrollToPosition(idx);
         }
-        return true;
     }
 
     public void onViewHolderLongClick(int position) {

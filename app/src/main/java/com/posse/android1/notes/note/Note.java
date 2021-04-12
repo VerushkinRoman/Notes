@@ -16,10 +16,11 @@ public class Note implements Parcelable {
         }
     };
 
-    private final int mNoteIndex;
+    private int mNoteIndex;
     private String mName;
     private String mDescription;
     private String mCreationDate;
+    private boolean mIsDeleteVisible;
 
     public Note(int noteIndex, String name, String description, String creationDate) {
         mNoteIndex = noteIndex;
@@ -33,10 +34,15 @@ public class Note implements Parcelable {
         mName = in.readString();
         mDescription = in.readString();
         mCreationDate = in.readString();
+        mIsDeleteVisible = in.readByte() != 0;
     }
 
     public int getNoteIndex() {
         return mNoteIndex;
+    }
+
+    public void setNoteIndex(int idx) {
+        mNoteIndex = idx;
     }
 
     public String getName() {
@@ -63,6 +69,14 @@ public class Note implements Parcelable {
         this.mCreationDate = creationDate;
     }
 
+    public void setIsDeleteVisible(boolean isVisible) {
+        mIsDeleteVisible = isVisible;
+    }
+
+    public boolean isDeleteVisible() {
+        return mIsDeleteVisible;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -74,5 +88,6 @@ public class Note implements Parcelable {
         dest.writeString(mName);
         dest.writeString(mDescription);
         dest.writeString(mCreationDate);
+        dest.writeByte((byte) (mIsDeleteVisible ? 1 : 0));
     }
 }
