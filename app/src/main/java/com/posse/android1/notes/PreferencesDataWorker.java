@@ -13,6 +13,7 @@ public class PreferencesDataWorker {
     private static final String PREFERENCES_KEY_OPENED_EDITOR = PreferencesDataWorker.class.getCanonicalName() + "_openedEditor";
     private static final String PREFERENCES_KEY_LAST_INDEX = PreferencesDataWorker.class.getCanonicalName() + "_lastIndex";
     private static final String PREFERENCES_KEY_GRID_VIEW = PreferencesDataWorker.class.getCanonicalName() + "_gridView";
+    private static final String PREFERENCES_KEY_COLOR = PreferencesDataWorker.class.getCanonicalName() + "_noteColor";
 
 
     private final SharedPreferences mPrefs;
@@ -27,6 +28,7 @@ public class PreferencesDataWorker {
         mEditor.putString(PREFERENCES_KEY_NAMES + "_" + note.getNoteIndex(), note.getName());
         mEditor.putString(PREFERENCES_KEY_NOTES + "_" + note.getNoteIndex(), note.getDescription());
         mEditor.putString(PREFERENCES_KEY_DATES + "_" + note.getNoteIndex(), note.getCreationDate());
+        mEditor.putInt(PREFERENCES_KEY_COLOR + "_" + note.getNoteIndex(), note.getColor());
         mEditor.apply();
     }
 
@@ -34,7 +36,8 @@ public class PreferencesDataWorker {
         return new Note(index,
                 mPrefs.getString(PREFERENCES_KEY_NAMES + "_" + index, null),
                 mPrefs.getString(PREFERENCES_KEY_NOTES + "_" + index, null),
-                mPrefs.getString(PREFERENCES_KEY_DATES + "_" + index, null));
+                mPrefs.getString(PREFERENCES_KEY_DATES + "_" + index, null),
+                mPrefs.getInt(PREFERENCES_KEY_COLOR + "_" + index, -1));
     }
 
     public void deleteNote(int index, int fullSize) {
@@ -43,10 +46,12 @@ public class PreferencesDataWorker {
             mEditor.putString(PREFERENCES_KEY_NAMES + "_" + i, mPrefs.getString(PREFERENCES_KEY_NAMES + "_" + (i + 1), null));
             mEditor.putString(PREFERENCES_KEY_NOTES + "_" + i, mPrefs.getString(PREFERENCES_KEY_NOTES + "_" + (i + 1), null));
             mEditor.putString(PREFERENCES_KEY_DATES + "_" + i, mPrefs.getString(PREFERENCES_KEY_DATES + "_" + (i + 1), null));
+            mEditor.putInt(PREFERENCES_KEY_COLOR + "_" + i, mPrefs.getInt(PREFERENCES_KEY_COLOR + "_" + (i + 1), -1));
         }
         mEditor.remove(PREFERENCES_KEY_NAMES + "_" + fullSize);
         mEditor.remove(PREFERENCES_KEY_NOTES + "_" + fullSize);
         mEditor.remove(PREFERENCES_KEY_DATES + "_" + fullSize);
+        mEditor.remove(PREFERENCES_KEY_COLOR + "_" + fullSize);
         mEditor.apply();
     }
 
@@ -82,6 +87,12 @@ public class PreferencesDataWorker {
     public void setGridView(boolean isGridView) {
         mEditor = mPrefs.edit();
         mEditor.putBoolean(PREFERENCES_KEY_GRID_VIEW, isGridView);
+        mEditor.apply();
+    }
+
+    public void setNoteColor(Note note) {
+        mEditor = mPrefs.edit();
+        mEditor.putInt(PREFERENCES_KEY_COLOR + "_" + note.getNoteIndex(), note.getColor());
         mEditor.apply();
     }
 }

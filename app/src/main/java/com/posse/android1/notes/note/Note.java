@@ -21,12 +21,14 @@ public class Note implements Parcelable {
     private String mDescription;
     private String mCreationDate;
     private boolean mIsDeleteVisible;
+    private int mColor;
 
-    public Note(int noteIndex, String name, String description, String creationDate) {
+    public Note(int noteIndex, String name, String description, String creationDate, int color) {
         mNoteIndex = noteIndex;
         mName = name;
         mDescription = description;
         mCreationDate = creationDate;
+        mColor = color;
     }
 
     protected Note(Parcel in) {
@@ -35,6 +37,7 @@ public class Note implements Parcelable {
         mDescription = in.readString();
         mCreationDate = in.readString();
         mIsDeleteVisible = in.readByte() != 0;
+        mColor = in.readInt();
     }
 
     public int getNoteIndex() {
@@ -77,6 +80,14 @@ public class Note implements Parcelable {
         return mIsDeleteVisible;
     }
 
+    public int getColor() {
+        return mColor;
+    }
+
+    public void setColor(int color) {
+        mColor = color;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -89,5 +100,6 @@ public class Note implements Parcelable {
         dest.writeString(mDescription);
         dest.writeString(mCreationDate);
         dest.writeByte((byte) (mIsDeleteVisible ? 1 : 0));
+        dest.writeInt(mColor);
     }
 }

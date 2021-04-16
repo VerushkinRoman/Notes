@@ -12,7 +12,7 @@
     <string name="hint_note_body">Text</string>
     <string name="save_button_text">Save</string>
     <string name="new_note_button_description">new Note button</string>
-    <string name="edit_bar_title">Edit button</string>
+    <string name="edit_bar_title">Edit</string>
     <string name="edit_context_title">Edit</string>
     <string name="delete_context_title">Delete</string>
     <string name="settings_fragment_message">This is settings fragment</string>
@@ -22,6 +22,7 @@
     <string name="no">No</string>
     <string name="yes">Yes</string>
     <string name="delete_dialog">Delete dialog</string>
-    <string name="delete_bar_title">Delete button</string>
+    <string name="delete_bar_title">Delete</string>
     <string name="delete_current_confirmation">Delete current note?</string>
+    <string name="spinner">Color</string>
 </resources>

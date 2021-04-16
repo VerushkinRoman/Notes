@@ -1,7 +1,10 @@
 package com.posse.android1.notes.ui.notes;
 
 import android.content.res.Configuration;
+import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -9,7 +12,9 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -20,6 +25,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.posse.android1.notes.CustomSpinnerAdapter;
 import com.posse.android1.notes.MainActivity;
 import com.posse.android1.notes.PreferencesDataWorker;
 import com.posse.android1.notes.R;
@@ -32,6 +38,8 @@ import com.posse.android1.notes.ui.editor.EditorFragment;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Objects;
+
+import static com.posse.android1.notes.CustomSpinnerAdapter.PADDING;
 
 public class MainNoteFragment extends Fragment {
 
@@ -52,7 +60,9 @@ public class MainNoteFragment extends Fragment {
     private static final String KEY_CHECKED_CARDS = MainNoteFragment.class.getCanonicalName() + "_mCheckedCards";
     private ArrayList<Integer> mCheckedCards;
     private NoteListFragment mNoteListFragment;
+    private NoteFragment mNoteFragment;
     private NoteSource mNoteSource;
+    private Spinner mColorSpinner;
     private PreferencesDataWorker mPrefsData;
     private Note mCurrentNote;
     private boolean mIsLandscape;
@@ -63,6 +73,7 @@ public class MainNoteFragment extends Fragment {
     private MenuItem mSwitchView;
     private MenuItem mEditBar;
     private MenuItem mDeleteBar;
+    private MenuItem mSpinnerView;
     private FloatingActionButton mFloatingButton;
     private boolean mIsEmpty;
     private boolean mIsGridView;
@@ -180,6 +191,8 @@ public class MainNoteFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         if (savedInstanceState != null) {
             mNoteListFragment = (NoteListFragment) mFragmentManager.findFragmentByTag(TAG_NOTES_LIST);
+            mNoteFragment = (NoteFragment) mFragmentManager.findFragmentByTag(TAG_NOTE);
+            if (mNoteFragment != null) mCurrentNote = mNoteFragment.getNote();
         } else {
             mNoteListFragment = new NoteListFragment(mIsGridView);
         }
@@ -190,14 +203,12 @@ public class MainNoteFragment extends Fragment {
         }
         if (savedInstanceState == null && mPrefsData.isEditorOpened()) {
             mLastSelectedPosition = mPrefsData.getLastIndex();
-            if (mLastSelectedPosition != -1) {
-                mCurrentNote = mNoteSource.getItemAt(mLastSelectedPosition);
-                showNote(mCurrentNote);
-            }
-            showEditor(mLastSelectedPosition);
+            if (mLastSelectedPosition != -1) showEditor(mLastSelectedPosition);
+            else mPrefsData.setEditorOpened(false, mNoteSource.getItemsCount());
             mLastSelectedPosition = 0;
-        } else if (mIsLandscape) {
-            mCurrentNote = mNoteSource.getItemAt(mLastSelectedPosition);
+        }
+        if (mIsLandscape) {
+            if (mCurrentNote == null) mCurrentNote = mNoteSource.getItemAt(mLastSelectedPosition);
             showNote(mCurrentNote);
         }
     }
@@ -225,6 +236,9 @@ public class MainNoteFragment extends Fragment {
             DeleteFragment.newInstance(mCheckedCards.size() < 1).show(mFragmentManager, null);
             return false;
         });
+        mSpinnerView = menu.findItem(R.id.spinner);
+        mColorSpinner = (Spinner) mSpinnerView.getActionView();
+        addItemsToSpinner();
         Drawable gridView = Objects.requireNonNull(ContextCompat.getDrawable(requireActivity(), android.R.drawable.ic_dialog_dialer));
         Drawable lineView = Objects.requireNonNull(ContextCompat.getDrawable(requireActivity(), android.R.drawable.ic_menu_sort_by_size));
         Drawable menuIcon = mIsGridView ? gridView : lineView;
@@ -234,26 +248,103 @@ public class MainNoteFragment extends Fragment {
             Drawable icon = mSwitchView.getIcon().getConstantState().equals(lineView.getConstantState()) ? gridView : lineView;
             mSwitchView.setIcon(icon);
             mIsGridView = icon.equals(gridView);
-            refreshNoteListFragment();
+            refreshFragment(mNoteListFragment);
             mPrefsData.setGridView(mIsGridView);
             return false;
         });
         changeButtonsLook(mButtonsView);
     }
 
-    private void refreshNoteListFragment() {
-        if (mNoteListFragment != null && mNoteListFragment.isVisible()) {
-            mNoteListFragment.setGridView(mIsGridView);
+    private void addItemsToSpinner() {
+        ArrayList<Integer> list = new ArrayList<>();
+        list.add(android.R.color.transparent);
+        list.add(android.R.color.holo_purple);
+        list.add(android.R.color.holo_blue_dark);
+        list.add(android.R.color.holo_blue_bright);
+        list.add(android.R.color.holo_green_dark);
+        list.add(android.R.color.holo_green_light);
+        list.add(android.R.color.holo_orange_light);
+        list.add(android.R.color.holo_orange_dark);
+        list.add(android.R.color.holo_red_light);
+        list.add(android.R.color.holo_red_dark);
+        list.add(-1);
+
+        CustomSpinnerAdapter customSpinnerAdapter = new CustomSpinnerAdapter(requireActivity(), list);
+        mColorSpinner.setAdapter(customSpinnerAdapter);
+        mColorSpinner.setPadding(0, PADDING * 10, 0, PADDING * 10);
+        mColorSpinner.setDropDownVerticalOffset(PADDING * 2);
+        mColorSpinner.setPopupBackgroundDrawable(null);
+        Drawable drawable = (customSpinnerAdapter.getCustomView(0)).getDrawable();
+        LayerDrawable background = new LayerDrawable(new Drawable[]{drawable});
+        if (mIsLandscape) background.setLayerInset(0, 0, PADDING * 4, PADDING * 2, PADDING * 4 + 2);
+        else background.setLayerInset(0, 0, PADDING * 3, PADDING * 3, PADDING * 3);
+        mColorSpinner.setBackground(background);
+        mColorSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (position != 0) {
+                    view.setVisibility(View.GONE);
+                    int noteColor = list.get(position);
+                    setNoteColor(noteColor);
+                    setColorSpinnerBackground(noteColor);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+    }
+
+    @Override
+    public void onPrepareOptionsMenu(@NonNull Menu menu) {
+        super.onPrepareOptionsMenu(menu);
+        if (mIsLandscape && mNoteFragment != null && mNoteFragment.isVisible()) {
+            setColorSpinnerBackground(mCurrentNote.getColor());
+        }
+    }
+
+    private void setColorSpinnerBackground(int color) {
+        if (mColorSpinner != null) {
+            LayerDrawable background = (LayerDrawable) mColorSpinner.getBackground();
+            GradientDrawable layer0 = (GradientDrawable) background.getDrawable(0);
+            if (color == -1) {
+                TypedArray array = requireActivity().getTheme().obtainStyledAttributes(new int[]{android.R.attr.colorBackgroundFloating});
+                color = array.getColor(0, 0xFF00FF);
+                array.recycle();
+            } else color = ContextCompat.getColor(requireActivity(), color);
+            layer0.setColor(color);
+        }
+    }
+
+    private void setNoteColor(int color) {
+        if (mCurrentNote != null) {
+            mCurrentNote.setColor(color);
+            mPrefsData.setNoteColor(mCurrentNote);
+            mNoteFragment.setNote(mCurrentNote);
+            mNoteSource.getItemAt(mCurrentNote.getNoteIndex()).setColor(color);
+            mNoteListFragment.onDataChanged(mCurrentNote.getNoteIndex(), false);
+            refreshFragment(mNoteFragment);
+        }
+    }
+
+    private void refreshFragment(Fragment fragment) {
+        if (fragment != null && fragment.isVisible()) {
+            if (fragment instanceof NoteListFragment)
+                ((NoteListFragment) fragment).setGridView(mIsGridView);
             FragmentTransaction fragmentTransaction = mFragmentManager.beginTransaction();
-            fragmentTransaction.detach(mNoteListFragment);
+            fragmentTransaction.detach(fragment);
             fragmentTransaction.commitNow();
-            fragmentTransaction.attach(mNoteListFragment);
+            fragmentTransaction.attach(fragment);
             fragmentTransaction.commitNow();
         }
     }
 
     private void showNote(Note note) {
-        replaceFragments(NoteFragment.newInstance(note));
+        mNoteFragment = NoteFragment.newInstance(note);
+        mCurrentNote = note;
+        setColorSpinnerBackground(note.getColor());
+        replaceFragments(mNoteFragment);
     }
 
     private void replaceFragments(Fragment newFragment) {
@@ -351,12 +442,14 @@ public class MainNoteFragment extends Fragment {
                 showFloatingButton(true);
                 showSwitchView(true);
                 showEditBar(false);
+                showSpinner(false);
                 break;
             case NOTE_VIEW:
                 showDeleteBar(true);
                 showFloatingButton(mIsLandscape);
                 showSwitchView(false);
                 showEditBar(true);
+                showSpinner(true);
                 mIsEmpty = false;
                 break;
             case EMPTY_VIEW:
@@ -364,6 +457,7 @@ public class MainNoteFragment extends Fragment {
                 showFloatingButton(true);
                 showEditBar(false);
                 showSwitchView(!mIsLandscape);
+                showSpinner(false);
                 mIsEmpty = true;
                 break;
             default:
@@ -388,5 +482,9 @@ public class MainNoteFragment extends Fragment {
 
     private void showDeleteBar(boolean isVisible) {
         if (mDeleteBar != null) mDeleteBar.setVisible(isVisible);
+    }
+
+    private void showSpinner(boolean isVisible) {
+        if (mSpinnerView != null) mSpinnerView.setVisible(isVisible);
     }
 }

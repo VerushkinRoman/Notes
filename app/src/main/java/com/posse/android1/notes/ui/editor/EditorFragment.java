@@ -1,6 +1,7 @@
 package com.posse.android1.notes.ui.editor;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,6 +12,8 @@ import android.widget.Button;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.cardview.widget.CardView;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.DialogFragment;
 
 import com.google.android.material.textfield.TextInputEditText;
@@ -57,7 +60,7 @@ public class EditorFragment extends DialogFragment {
             mMaxNoteIndex = savedInstanceState.getInt(KEY_MAX_NOTE_INDEX);
         }
         if (mCurrentNoteIndex == -1) {
-            mNote = new Note(mMaxNoteIndex, "", "", DateFormatter.getCurrentDate());
+            mNote = new Note(mMaxNoteIndex, "", "", DateFormatter.getCurrentDate(), -1);
         } else {
             NoteSource noteSource = NoteSourceImpl.getInstance(requireActivity());
             mNote = noteSource.getItemAt(mCurrentNoteIndex);
@@ -94,6 +97,16 @@ public class EditorFragment extends DialogFragment {
         if (mEditNoteBody.requestFocus()) {
             mInputMethodManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
         }
+        int color = mNote.getColor();
+        CardView card = view.findViewById(R.id.card_editor);
+        if (color != -1) {
+            color = ResourcesCompat.getColor(getResources(), color, null);
+        } else {
+            TypedArray array = requireActivity().getTheme().obtainStyledAttributes(new int[]{android.R.attr.colorBackgroundFloating});
+            color = array.getColor(0, 0xFF00FF);
+            array.recycle();
+        }
+        card.setCardBackgroundColor(color);
     }
 
     public void saveNote(boolean isPaused) {

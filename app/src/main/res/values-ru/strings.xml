@@ -12,7 +12,7 @@
     <string name="hint_note_body">Текст</string>
     <string name="save_button_text">Сохранить</string>
     <string name="new_note_button_description">кнопка Новой заметки</string>
-    <string name="edit_bar_title">кнопка Редактирования</string>
+    <string name="edit_bar_title">Редактировать</string>
     <string name="edit_context_title">Редактировать</string>
     <string name="delete_context_title">Удалить</string>
     <string name="nav_header_desc">Заголовок навигации</string>
@@ -22,10 +22,11 @@
     <string name="no">Нет</string>
     <string name="yes">Да</string>
     <string name="delete_dialog">Диалог удаления</string>
-    <string name="delete_bar_title">кнопка Удаления</string>
+    <string name="delete_bar_title">Удалить</string>
     <string name="navigation_drawer_open">Открыть панель навигации</string>
     <string name="navigation_drawer_close">Закрыть панель навигации</string>
     <string name="action_settings">Настройки</string>
     <string name="menu_home">Домой</string>
     <string name="delete_current_confirmation">Удалиить текущую заметку?</string>
+    <string name="spinner">Цвет</string>
 </resources>
