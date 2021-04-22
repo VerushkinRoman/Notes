@@ -23,10 +23,8 @@
     <string name="yes">Да</string>
     <string name="delete_dialog">Диалог удаления</string>
     <string name="delete_bar_title">Удалить</string>
-    <string name="navigation_drawer_open">Открыть панель навигации</string>
-    <string name="navigation_drawer_close">Закрыть панель навигации</string>
-    <string name="action_settings">Настройки</string>
-    <string name="menu_home">Домой</string>
     <string name="delete_current_confirmation">Удалиить текущую заметку?</string>
     <string name="spinner">Цвет</string>
+    <string name="settings_header_text_size">Размер текста заголовка</string>
+    <string name="settings_note_text_size">Размер текста заметки</string>
 </resources>

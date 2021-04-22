@@ -1,6 +1,7 @@
 package com.posse.android1.notes.adapter;
 
 import android.content.res.TypedArray;
+import android.util.TypedValue;
 import android.view.View;
 
 import androidx.annotation.NonNull;
@@ -8,6 +9,7 @@ import androidx.appcompat.widget.AppCompatImageView;
 import androidx.appcompat.widget.AppCompatTextView;
 import androidx.cardview.widget.CardView;
 import androidx.core.content.res.ResourcesCompat;
+import androidx.core.widget.TextViewCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -33,15 +35,21 @@ class ViewHolder extends RecyclerView.ViewHolder {
         mCard = itemView.findViewById(R.id.card_list_notes);
     }
 
-    public void fillCard(NoteListFragment fragment, Note note) {
-        mHeader.setText(note.getName());
+    public void fillCard(NoteListFragment fragment, Note note, float headerSize, float noteSize) {
+        TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(mHeader, (int) headerSize,
+                (int) (fragment.getResources().getDimension(R.dimen.max_header_size)
+                        / fragment.getResources().getDisplayMetrics().scaledDensity),
+                2, TypedValue.COMPLEX_UNIT_PX);
+        final String[] caption = note.getName().split("\\R", 2);
+        mHeader.setText(caption[0]);
         mDescription.setText(note.getDescription());
+        mDescription.setTextSize(noteSize);
         mTimestamp.setText(note.getCreationDate());
         int color = note.getColor();
         if (color != -1) {
             color = ResourcesCompat.getColor(fragment.getResources(), color, null);
         } else {
-            TypedArray array = fragment.requireActivity().getTheme().obtainStyledAttributes(new int[]{android.R.attr.colorBackgroundFloating});
+            final TypedArray array = fragment.requireActivity().getTheme().obtainStyledAttributes(new int[]{android.R.attr.colorBackgroundFloating});
             color = array.getColor(0, 0xFF00FF);
             array.recycle();
         }

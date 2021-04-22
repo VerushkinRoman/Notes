@@ -14,12 +14,15 @@ public class PreferencesDataWorker {
     private static final String PREFERENCES_KEY_LAST_INDEX = PreferencesDataWorker.class.getCanonicalName() + "_lastIndex";
     private static final String PREFERENCES_KEY_GRID_VIEW = PreferencesDataWorker.class.getCanonicalName() + "_gridView";
     private static final String PREFERENCES_KEY_COLOR = PreferencesDataWorker.class.getCanonicalName() + "_noteColor";
-
+    private static final String PREFERENCES_KEY_HEADER_TEXT_SIZE = PreferencesDataWorker.class.getCanonicalName() + "_headerTextSize";
+    private static final String PREFERENCES_KEY_NOTE_TEXT_SIZE = PreferencesDataWorker.class.getCanonicalName() + "_noteTextSize";
 
     private final SharedPreferences mPrefs;
+    private final Context mContext;
     private SharedPreferences.Editor mEditor;
 
     public PreferencesDataWorker(Context context) {
+        mContext = context;
         mPrefs = context.getSharedPreferences(PREFERENCES_KEY, Context.MODE_PRIVATE);
     }
 
@@ -93,6 +96,30 @@ public class PreferencesDataWorker {
     public void setNoteColor(Note note) {
         mEditor = mPrefs.edit();
         mEditor.putInt(PREFERENCES_KEY_COLOR + "_" + note.getNoteIndex(), note.getColor());
+        mEditor.apply();
+    }
+
+    public float getHeaderTextSize() {
+        return mPrefs.getFloat(PREFERENCES_KEY_HEADER_TEXT_SIZE,
+                mContext.getResources().getDimension(R.dimen.header_text_size)
+                        / mContext.getResources().getDisplayMetrics().scaledDensity);
+    }
+
+    public void setHeaderTextSize(float textSize) {
+        mEditor = mPrefs.edit();
+        mEditor.putFloat(PREFERENCES_KEY_HEADER_TEXT_SIZE, textSize);
+        mEditor.apply();
+    }
+
+    public float getNoteTextSize() {
+        return mPrefs.getFloat(PREFERENCES_KEY_NOTE_TEXT_SIZE,
+                mContext.getResources().getDimension(R.dimen.note_text_size)
+                        / mContext.getResources().getDisplayMetrics().scaledDensity);
+    }
+
+    public void setNoteTextSize(float textSize) {
+        mEditor = mPrefs.edit();
+        mEditor.putFloat(PREFERENCES_KEY_NOTE_TEXT_SIZE, textSize);
         mEditor.apply();
     }
 }

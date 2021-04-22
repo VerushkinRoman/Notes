@@ -26,8 +26,8 @@ public class DeleteFragment extends DialogFragment {
     }
 
     public static DeleteFragment newInstance(boolean isCurrentNote) {
-        DeleteFragment fragment = new DeleteFragment();
-        Bundle args = new Bundle();
+        final DeleteFragment fragment = new DeleteFragment();
+        final Bundle args = new Bundle();
         args.putBoolean(KEY_DELETE, isCurrentNote);
         fragment.setArguments(args);
         return fragment;
@@ -43,16 +43,16 @@ public class DeleteFragment extends DialogFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_delete, container, false);
-        TextView dialog = view.findViewById(R.id.dialog_caption);
-        int textResource = mIsCurrentNote ? R.string.delete_current_confirmation : R.string.delete_confirmation;
+        final View view = inflater.inflate(R.layout.fragment_delete, container, false);
+        final TextView dialog = view.findViewById(R.id.dialog_caption);
+        final int textResource = mIsCurrentNote ? R.string.delete_current_confirmation : R.string.delete_confirmation;
         dialog.setText(textResource);
-        MaterialButton btnYes = view.findViewById(R.id.confirm_button);
+        final MaterialButton btnYes = view.findViewById(R.id.confirm_button);
         btnYes.setOnClickListener(v -> {
             dismiss();
             requireActivity().getSupportFragmentManager().setFragmentResult(MainNoteFragment.KEY_REQUEST_DELETION_CONFIRMATION, new Bundle());
         });
-        MaterialButton btnNo = view.findViewById(R.id.cancel_button);
+        final MaterialButton btnNo = view.findViewById(R.id.cancel_button);
         btnNo.setOnClickListener(v -> dismiss());
         setCancelable(false);
         return view;
@@ -61,10 +61,10 @@ public class DeleteFragment extends DialogFragment {
     @Override
     public void onResume() {
         try {
-            Window dialogWindow = Objects.requireNonNull(getDialog()).getWindow();
+            final Window dialogWindow = Objects.requireNonNull(getDialog()).getWindow();
             int width = ViewGroup.LayoutParams.MATCH_PARENT;
             if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                DisplayMetrics displayMetrics = new DisplayMetrics();
+                final DisplayMetrics displayMetrics = new DisplayMetrics();
                 requireActivity().getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
                 //noinspection SuspiciousNameCombination
                 width = displayMetrics.heightPixels;

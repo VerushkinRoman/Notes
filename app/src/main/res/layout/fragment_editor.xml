@@ -36,6 +36,7 @@
                             android:layout_marginBottom="7dp"
                             android:backgroundTint="@android:color/transparent"
                             android:hint="@string/hint_note_header"
+                            android:inputType="textAutoCorrect|textMultiLine|textCapSentences"
                             android:textAlignment="center"
                             android:textSize="30sp"
                             tools:text="Note header" />
@@ -51,6 +52,7 @@
                             android:layout_height="wrap_content"
                             android:backgroundTint="@android:color/transparent"
                             android:hint="@string/hint_note_body"
+                            android:inputType="textAutoCorrect|textMultiLine|textCapSentences"
                             android:textSize="20sp"
                             tools:text="Note body" />
                     </com.google.android.material.textfield.TextInputLayout>

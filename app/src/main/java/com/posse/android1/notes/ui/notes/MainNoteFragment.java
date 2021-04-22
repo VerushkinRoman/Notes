@@ -26,7 +26,6 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.posse.android1.notes.CustomSpinnerAdapter;
-import com.posse.android1.notes.MainActivity;
 import com.posse.android1.notes.PreferencesDataWorker;
 import com.posse.android1.notes.R;
 import com.posse.android1.notes.note.Note;
@@ -94,7 +93,6 @@ public class MainNoteFragment extends Fragment {
             mCheckedCards = savedInstanceState.getIntegerArrayList(KEY_CHECKED_CARDS);
             restoreCheckedCards();
         } else mIsGridView = mPrefsData.isGridView();
-        setResultListeners();
     }
 
     private void restoreCheckedCards() {
@@ -105,56 +103,10 @@ public class MainNoteFragment extends Fragment {
         }
     }
 
-    private void setResultListeners() {
-        mFragmentManager.setFragmentResultListener(KEY_REQUEST_CLICKED_POSITION, this, (requestKey, bundle) -> {
-            if (System.currentTimeMillis() - mLastTimePressed > 300) {
-                mLastSelectedPosition = bundle.getInt(NoteListFragment.KEY_POSITION_CLICKED);
-                if (!mCheckedCards.isEmpty()) {
-                    changeCheckboxState();
-                } else showNote(mNoteSource.getItemAt(mLastSelectedPosition));
-
-            }
-        });
-        mFragmentManager.setFragmentResultListener(KEY_REQUEST_LONG_CLICKED_POSITION, this, (requestKey, bundle) -> {
-            mLastSelectedPosition = bundle.getInt(NoteListFragment.KEY_POSITION_LONG_CLICKED);
-            changeCheckboxState();
-            mLastTimePressed = System.currentTimeMillis();
-        });
-        mFragmentManager.setFragmentResultListener(KEY_REQUEST_DELETION_CONFIRMATION, this, (requestKey, bundle) -> {
-            deleteNotes();
-            Bundle result = new Bundle();
-            result.putIntegerArrayList(KEY_DELETE_POSITION, mCheckedCards);
-            mFragmentManager.setFragmentResult(NoteListFragment.KEY_REQUEST_DELETE_POSITION, result);
-        });
-        mFragmentManager.setFragmentResultListener(KEY_REQUEST_NOTE_TO_SAVE, this, (requestKey, bundle) -> {
-            boolean isEditorPaused = bundle.getBoolean(EditorFragment.KEY_PAUSED);
-            if (isEditorPaused) {
-                Note note = bundle.getParcelable(EditorFragment.KEY_NOTE);
-                saveNote(note);
-            }
-            int position = mLastSelectedPosition;
-            if (mIsNewNote) position = -1;
-            mPrefsData.setEditorOpened(isEditorPaused, position);
-        });
-        mFragmentManager.setFragmentResultListener(KEY_REQUEST_BACK_PRESSED, this, (requestKey, bundle) -> {
-            int view = bundle.getInt(MainActivity.KEY_BUTTONS_VIEW);
-            if (mIsEmpty) view = EMPTY_VIEW;
-            if (!mCheckedCards.isEmpty()) {
-                mCheckedCards.clear();
-                for (int i = 0; i < mNoteSource.getItemsCount(); i++) {
-                    mNoteSource.getItemAt(i).setIsDeleteVisible(false);
-                }
-                mNoteListFragment.onDataChanged(NoteListFragment.ALL_ITEMS_CHANGED, false);
-            }
-            changeButtonsLook(view);
-        });
-
-    }
-
     private void changeCheckboxState() {
-        Note note = mNoteSource.getItemAt(mLastSelectedPosition);
+        final Note note = mNoteSource.getItemAt(mLastSelectedPosition);
         if (note.isDeleteVisible()) {
-            Integer index = mLastSelectedPosition;
+            final Integer index = mLastSelectedPosition;
             mCheckedCards.remove(index);
             note.setIsDeleteVisible(false);
         } else {
@@ -172,15 +124,15 @@ public class MainNoteFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         setHasOptionsMenu(true);
-        View view = inflater.inflate(R.layout.fragment_main_notes, container, false);
+        final View view = inflater.inflate(R.layout.fragment_main_notes, container, false);
         mFloatingButton = view.findViewById(R.id.fab);
         mFloatingButton.setOnClickListener(v -> {
             showEditor(-1);
             mIsNewNote = true;
         });
         if (!mIsLandscape) {
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 0.0f);
-            FragmentContainerView fragmentView = view.findViewById(R.id.note_container);
+            final LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 0.0f);
+            final FragmentContainerView fragmentView = view.findViewById(R.id.note_container);
             fragmentView.setLayoutParams(params);
         }
         return view;
@@ -189,28 +141,68 @@ public class MainNoteFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        if (savedInstanceState != null) {
-            mNoteListFragment = (NoteListFragment) mFragmentManager.findFragmentByTag(TAG_NOTES_LIST);
-            mNoteFragment = (NoteFragment) mFragmentManager.findFragmentByTag(TAG_NOTE);
-            if (mNoteFragment != null) mCurrentNote = mNoteFragment.getNote();
-        } else {
-            mNoteListFragment = new NoteListFragment(mIsGridView);
-        }
+        mNoteListFragment = NoteListFragment.newInstance(mIsGridView, mPrefsData.getHeaderTextSize(), mPrefsData.getNoteTextSize());
         replaceFragments(mNoteListFragment);
-        if (mNoteSource.getItemsCount() == 0) {
-            if (mIsLandscape) removeLastNoteFragment();
-            return;
-        }
         if (savedInstanceState == null && mPrefsData.isEditorOpened()) {
             mLastSelectedPosition = mPrefsData.getLastIndex();
-            if (mLastSelectedPosition != -1) showEditor(mLastSelectedPosition);
-            else mPrefsData.setEditorOpened(false, mNoteSource.getItemsCount());
+            if (mLastSelectedPosition != -1) {
+                showNote(mNoteSource.getItemAt(mLastSelectedPosition));
+                showEditor(mLastSelectedPosition);
+            } else mPrefsData.setEditorOpened(false, mNoteSource.getItemsCount());
             mLastSelectedPosition = 0;
         }
         if (mIsLandscape) {
-            if (mCurrentNote == null) mCurrentNote = mNoteSource.getItemAt(mLastSelectedPosition);
-            showNote(mCurrentNote);
+            if ((mNoteSource.getItemsCount() == 0)) removeLastNoteFragment();
+            else {
+                mCurrentNote = mNoteSource.getItemAt(mLastSelectedPosition);
+                showNote(mCurrentNote);
+            }
         }
+        setResultListeners();
+    }
+
+    private void setResultListeners() {
+        mFragmentManager.setFragmentResultListener(KEY_REQUEST_CLICKED_POSITION, this, (requestKey, bundle) -> {
+            if (System.currentTimeMillis() - mLastTimePressed > 500) {
+                mLastSelectedPosition = bundle.getInt(NoteListFragment.KEY_POSITION_CLICKED);
+                if (!mCheckedCards.isEmpty()) {
+                    changeCheckboxState();
+                } else showNote(mNoteSource.getItemAt(mLastSelectedPosition));
+            }
+        });
+        mFragmentManager.setFragmentResultListener(KEY_REQUEST_LONG_CLICKED_POSITION, this, (requestKey, bundle) -> {
+            mLastSelectedPosition = bundle.getInt(NoteListFragment.KEY_POSITION_LONG_CLICKED);
+            changeCheckboxState();
+            mLastTimePressed = System.currentTimeMillis();
+        });
+        mFragmentManager.setFragmentResultListener(KEY_REQUEST_DELETION_CONFIRMATION, this, (requestKey, bundle) -> {
+            deleteNotes();
+            final Bundle result = new Bundle();
+            result.putIntegerArrayList(KEY_DELETE_POSITION, mCheckedCards);
+            mFragmentManager.setFragmentResult(NoteListFragment.KEY_REQUEST_DELETE_POSITION, result);
+        });
+        mFragmentManager.setFragmentResultListener(KEY_REQUEST_NOTE_TO_SAVE, this, (requestKey, bundle) -> {
+            final boolean isEditorPaused = bundle.getBoolean(EditorFragment.KEY_PAUSED);
+            if (isEditorPaused) {
+                final Note note = bundle.getParcelable(EditorFragment.KEY_NOTE);
+                saveNote(note);
+            }
+            final int position = mIsNewNote ? -1 : mLastSelectedPosition;
+            mPrefsData.setEditorOpened(isEditorPaused, position);
+        });
+        mFragmentManager.setFragmentResultListener(KEY_REQUEST_BACK_PRESSED, this, (requestKey, bundle) -> {
+            if (!mCheckedCards.isEmpty()) {
+                mCheckedCards.clear();
+                for (int i = 0; i < mNoteSource.getItemsCount(); i++) {
+                    mNoteSource.getItemAt(i).setIsDeleteVisible(false);
+                }
+                mNoteListFragment.onDataChanged(NoteListFragment.ALL_ITEMS_CHANGED, false);
+            }
+            final int buttonsView;
+            if (mIsEmpty) buttonsView = EMPTY_VIEW;
+            else buttonsView = mIsLandscape ? NOTE_VIEW : NOTE_LIST_VIEW;
+            changeButtonsLook(buttonsView);
+        });
     }
 
     @Override
@@ -239,13 +231,14 @@ public class MainNoteFragment extends Fragment {
         mSpinnerView = menu.findItem(R.id.spinner);
         mColorSpinner = (Spinner) mSpinnerView.getActionView();
         addItemsToSpinner();
-        Drawable gridView = Objects.requireNonNull(ContextCompat.getDrawable(requireActivity(), android.R.drawable.ic_dialog_dialer));
-        Drawable lineView = Objects.requireNonNull(ContextCompat.getDrawable(requireActivity(), android.R.drawable.ic_menu_sort_by_size));
-        Drawable menuIcon = mIsGridView ? gridView : lineView;
+
+        final Drawable gridView = Objects.requireNonNull(ContextCompat.getDrawable(requireActivity(), android.R.drawable.ic_dialog_dialer));
+        final Drawable lineView = Objects.requireNonNull(ContextCompat.getDrawable(requireActivity(), android.R.drawable.ic_menu_sort_by_size));
+        final Drawable menuIcon = mIsGridView ? gridView : lineView;
         mSwitchView = menu.findItem(R.id.action_switch_view);
         mSwitchView.setIcon(menuIcon);
         mSwitchView.setOnMenuItemClickListener(item -> {
-            Drawable icon = mSwitchView.getIcon().getConstantState().equals(lineView.getConstantState()) ? gridView : lineView;
+            final Drawable icon = mSwitchView.getIcon().getConstantState().equals(lineView.getConstantState()) ? gridView : lineView;
             mSwitchView.setIcon(icon);
             mIsGridView = icon.equals(gridView);
             refreshFragment(mNoteListFragment);
@@ -256,7 +249,7 @@ public class MainNoteFragment extends Fragment {
     }
 
     private void addItemsToSpinner() {
-        ArrayList<Integer> list = new ArrayList<>();
+        final ArrayList<Integer> list = new ArrayList<>();
         list.add(android.R.color.transparent);
         list.add(android.R.color.holo_purple);
         list.add(android.R.color.holo_blue_dark);
@@ -269,22 +262,22 @@ public class MainNoteFragment extends Fragment {
         list.add(android.R.color.holo_red_dark);
         list.add(-1);
 
-        CustomSpinnerAdapter customSpinnerAdapter = new CustomSpinnerAdapter(requireActivity(), list);
+        final CustomSpinnerAdapter customSpinnerAdapter = new CustomSpinnerAdapter(requireActivity(), list);
         mColorSpinner.setAdapter(customSpinnerAdapter);
         mColorSpinner.setPadding(0, PADDING * 10, 0, PADDING * 10);
         mColorSpinner.setDropDownVerticalOffset(PADDING * 2);
         mColorSpinner.setPopupBackgroundDrawable(null);
-        Drawable drawable = (customSpinnerAdapter.getCustomView(0)).getDrawable();
-        LayerDrawable background = new LayerDrawable(new Drawable[]{drawable});
-        if (mIsLandscape) background.setLayerInset(0, 0, PADDING * 4, PADDING * 2, PADDING * 4 + 2);
-        else background.setLayerInset(0, 0, PADDING * 3, PADDING * 3, PADDING * 3);
+        final Drawable drawable = (customSpinnerAdapter.getCustomView(0)).getDrawable();
+        final LayerDrawable background = new LayerDrawable(new Drawable[]{drawable});
+        final int multiply = mIsLandscape ? 5 : 3;
+        background.setLayerInset(0, 0, PADDING * multiply, PADDING * 3, PADDING * multiply);
         mColorSpinner.setBackground(background);
         mColorSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (position != 0) {
                     view.setVisibility(View.GONE);
-                    int noteColor = list.get(position);
+                    final int noteColor = list.get(position);
                     setNoteColor(noteColor);
                     setColorSpinnerBackground(noteColor);
                 }
@@ -299,17 +292,17 @@ public class MainNoteFragment extends Fragment {
     @Override
     public void onPrepareOptionsMenu(@NonNull Menu menu) {
         super.onPrepareOptionsMenu(menu);
-        if (mIsLandscape && mNoteFragment != null && mNoteFragment.isVisible()) {
+        if (mIsLandscape && mNoteFragment != null) {
             setColorSpinnerBackground(mCurrentNote.getColor());
         }
     }
 
     private void setColorSpinnerBackground(int color) {
         if (mColorSpinner != null) {
-            LayerDrawable background = (LayerDrawable) mColorSpinner.getBackground();
-            GradientDrawable layer0 = (GradientDrawable) background.getDrawable(0);
+            final LayerDrawable background = (LayerDrawable) mColorSpinner.getBackground();
+            final GradientDrawable layer0 = (GradientDrawable) background.getDrawable(0);
             if (color == -1) {
-                TypedArray array = requireActivity().getTheme().obtainStyledAttributes(new int[]{android.R.attr.colorBackgroundFloating});
+                final TypedArray array = requireActivity().getTheme().obtainStyledAttributes(new int[]{android.R.attr.colorBackgroundFloating});
                 color = array.getColor(0, 0xFF00FF);
                 array.recycle();
             } else color = ContextCompat.getColor(requireActivity(), color);
@@ -332,7 +325,7 @@ public class MainNoteFragment extends Fragment {
         if (fragment != null && fragment.isVisible()) {
             if (fragment instanceof NoteListFragment)
                 ((NoteListFragment) fragment).setGridView(mIsGridView);
-            FragmentTransaction fragmentTransaction = mFragmentManager.beginTransaction();
+            final FragmentTransaction fragmentTransaction = mFragmentManager.beginTransaction();
             fragmentTransaction.detach(fragment);
             fragmentTransaction.commitNow();
             fragmentTransaction.attach(fragment);
@@ -341,14 +334,14 @@ public class MainNoteFragment extends Fragment {
     }
 
     private void showNote(Note note) {
-        mNoteFragment = NoteFragment.newInstance(note);
+        mNoteFragment = NoteFragment.newInstance(note, mPrefsData.getHeaderTextSize(), mPrefsData.getNoteTextSize());
         mCurrentNote = note;
         setColorSpinnerBackground(note.getColor());
         replaceFragments(mNoteFragment);
     }
 
     private void replaceFragments(Fragment newFragment) {
-        FragmentTransaction transaction = mFragmentManager.beginTransaction();
+        final FragmentTransaction transaction = mFragmentManager.beginTransaction();
         mButtonsView = NOTE_VIEW;
         int fragmentId = R.id.note_list_container;
         String backStackTag = null;
@@ -369,9 +362,11 @@ public class MainNoteFragment extends Fragment {
     }
 
     private void deleteNotes() {
+        changeButtonsLook(NOTE_LIST_VIEW);
+        final boolean fromNoteView = mCheckedCards.isEmpty();
         if (mCheckedCards.isEmpty()) mCheckedCards.add(mLastSelectedPosition);
         for (int i = 0; i < mCheckedCards.size(); i++) {
-            int idx = mCheckedCards.get(i);
+            final int idx = mCheckedCards.get(i);
             mNoteSource.remove(idx);
             mPrefsData.deleteNote(idx, mNoteSource.getItemsCount());
             for (int j = idx; j < mNoteSource.getItemsCount(); j++) {
@@ -381,13 +376,13 @@ public class MainNoteFragment extends Fragment {
         mPrefsData.writeNotesQuantity(mNoteSource.getItemsCount());
         if (mIsLandscape) {
             if (mNoteSource.getItemsCount() > 0) {
-                int idx = (mCheckedCards.size() > 1) ? 0 : mCheckedCards.get(0);
-                int position = Math.max(idx - 1, 0);
+                final int idx = (mCheckedCards.size() > 1) ? 0 : mCheckedCards.get(0);
+                final int position = Math.max(idx - 1, 0);
                 mCurrentNote = mNoteSource.getItemAt(position);
                 showNote(mCurrentNote);
             } else removeLastNoteFragment();
         } else {
-            mFragmentManager.popBackStack();
+            if (fromNoteView) mFragmentManager.popBackStack();
             if (mNoteSource.getItemsCount() > 0) {
                 showDeleteBar(false);
             } else {
@@ -400,10 +395,10 @@ public class MainNoteFragment extends Fragment {
     }
 
     private void removeLastNoteFragment() {
-        FragmentTransaction fragmentTransaction = mFragmentManager.beginTransaction();
-        Fragment fragment = mFragmentManager.findFragmentById(R.id.note_container);
-        if (fragment != null) {
-            fragmentTransaction.remove(fragment);
+        final FragmentTransaction fragmentTransaction = mFragmentManager.beginTransaction();
+        final Fragment noteFragment = mFragmentManager.findFragmentById(R.id.note_container);
+        if (noteFragment != null) {
+            fragmentTransaction.remove(noteFragment);
             fragmentTransaction.commit();
         }
         mLastSelectedPosition = -1;
@@ -412,7 +407,9 @@ public class MainNoteFragment extends Fragment {
     }
 
     private void showEditor(int lastSelectedPosition) {
-        new EditorFragment(lastSelectedPosition, mNoteSource.getItemsCount()).show(mFragmentManager, null);
+        EditorFragment.newInstance(lastSelectedPosition, mNoteSource.getItemsCount(),
+                mPrefsData.getHeaderTextSize(), mPrefsData.getNoteTextSize())
+                .show(mFragmentManager, null);
     }
 
     private void saveNote(Note note) {
@@ -424,6 +421,7 @@ public class MainNoteFragment extends Fragment {
                 mPrefsData.writeNotesQuantity(mNoteSource.getItemsCount());
             } else mButtonsView = NOTE_VIEW;
             mNoteListFragment.onDataChanged(note.getNoteIndex(), mIsNewNote);
+            if (!mIsLandscape && !mIsNewNote) mFragmentManager.popBackStack();
             mIsNewNote = false;
             mLastSelectedPosition = note.getNoteIndex();
             showNote(note);

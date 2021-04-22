@@ -6,7 +6,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -29,27 +28,39 @@ public class NoteListFragment extends Fragment {
     public static final String KEY_POSITION_LONG_CLICKED = NoteListFragment.class.getCanonicalName() + "_positionLongClick";
     public static final int ALL_ITEMS_CHANGED = -1;
     private static final String KEY_GRID_VIEW = NoteListFragment.class.getCanonicalName() + "_mIsGridView";
+    private static final String KEY_HEADER_SIZE = NoteListFragment.class.getCanonicalName() + "_mHeaderTextSize";
+    private static final String KEY_NOTE_SIZE = NoteListFragment.class.getCanonicalName() + "_mNoteTextSize";
     private ViewHolderAdapter mViewHolderAdapter;
     private RecyclerView mRecyclerView;
     private FragmentManager mFragmentManager;
     private boolean mIsGridView;
+    private float mHeaderTextSize;
+    private float mNoteTextSize;
 
     public NoteListFragment() {
     }
 
-    public NoteListFragment(boolean isGridView) {
-        mIsGridView = isGridView;
+    public static NoteListFragment newInstance(boolean isGridView, float headerTextSize, float noteTextSize) {
+        final NoteListFragment fragment = new NoteListFragment();
+        final Bundle args = new Bundle();
+        args.putBoolean(KEY_GRID_VIEW, isGridView);
+        args.putFloat(KEY_HEADER_SIZE, headerTextSize);
+        args.putFloat(KEY_NOTE_SIZE, noteTextSize);
+        fragment.setArguments(args);
+        return fragment;
     }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (savedInstanceState != null) {
-            mIsGridView = savedInstanceState.getBoolean(KEY_GRID_VIEW);
+        if (getArguments() != null) {
+            mIsGridView = getArguments().getBoolean(KEY_GRID_VIEW);
+            mHeaderTextSize = getArguments().getFloat(KEY_HEADER_SIZE);
+            mNoteTextSize = getArguments().getFloat(KEY_NOTE_SIZE);
         }
         mFragmentManager = requireActivity().getSupportFragmentManager();
         mFragmentManager.setFragmentResultListener(KEY_REQUEST_DELETE_POSITION, this, (requestKey, result) -> {
-            ArrayList<Integer> positionsToDelete = result.getIntegerArrayList(MainNoteFragment.KEY_DELETE_POSITION);
+            final ArrayList<Integer> positionsToDelete = result.getIntegerArrayList(MainNoteFragment.KEY_DELETE_POSITION);
             for (int i = 0; i < positionsToDelete.size(); i++) {
                 mViewHolderAdapter.notifyItemRemoved(positionsToDelete.get(i));
             }
@@ -59,35 +70,23 @@ public class NoteListFragment extends Fragment {
 
     @Override
     public View onCreateView(@NotNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
         mRecyclerView = (RecyclerView) inflater.inflate(R.layout.fragment_note_list, container, false);
         mRecyclerView.setHasFixedSize(true);
 
-        RecyclerView.LayoutManager layoutManager;
-        boolean isLandscape = getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
-
-        if (mIsGridView && !isLandscape) {
-            layoutManager = new GridLayoutManager(requireActivity(), 2);
-        } else {
-            layoutManager = new LinearLayoutManager(requireActivity());
-        }
+        final boolean isLandscape = getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
+        final RecyclerView.LayoutManager layoutManager = (mIsGridView && !isLandscape) ?
+                new GridLayoutManager(requireActivity(), 2) : new LinearLayoutManager(requireActivity());
         mRecyclerView.setLayoutManager(layoutManager);
 
-        mViewHolderAdapter = new ViewHolderAdapter(this, NoteSourceImpl.getInstance(requireActivity()));
+        mViewHolderAdapter = new ViewHolderAdapter(this, NoteSourceImpl.getInstance(requireActivity()), mHeaderTextSize, mNoteTextSize);
         mViewHolderAdapter.setOnClickListener((v, position) -> {
-            Bundle result = new Bundle();
+            final Bundle result = new Bundle();
             result.putInt(KEY_POSITION_CLICKED, position);
             mFragmentManager.setFragmentResult(MainNoteFragment.KEY_REQUEST_CLICKED_POSITION, result);
         });
         mRecyclerView.setAdapter(mViewHolderAdapter);
 
         return mRecyclerView;
-    }
-
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putBoolean(KEY_GRID_VIEW, mIsGridView);
     }
 
     public void onDataChanged(int idx, boolean isNewNote) {
@@ -102,7 +101,7 @@ public class NoteListFragment extends Fragment {
     }
 
     public void onViewHolderLongClick(int position) {
-        Bundle result = new Bundle();
+        final Bundle result = new Bundle();
         result.putInt(KEY_POSITION_LONG_CLICKED, position);
         mFragmentManager.setFragmentResult(MainNoteFragment.KEY_REQUEST_LONG_CLICKED_POSITION, result);
     }

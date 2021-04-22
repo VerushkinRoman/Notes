@@ -1,6 +1,5 @@
 package com.posse.android1.notes;
 
-import android.content.res.Configuration;
 import android.os.Bundle;
 import android.widget.Toast;
 
@@ -19,34 +18,33 @@ import com.posse.android1.notes.ui.notes.MainNoteFragment;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static final String KEY_BUTTONS_VIEW = MainActivity.class.getCanonicalName() + "_buttonsView";
     private static final int BACK_BUTTON_EXIT_DELAY = 3000;
     private long mLastTimePressed;
     private boolean mIsBackShown = false;
     private AppBarConfiguration mAppBarConfiguration;
     private Openable mDrawerLayout;
+    private NavController mNavController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = findViewById(R.id.toolbar);
+        final Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         mDrawerLayout = findViewById(R.id.drawer_layout);
-        NavigationView navigationView = findViewById(R.id.nav_view);
+        final NavigationView navigationView = findViewById(R.id.nav_view);
         mAppBarConfiguration = new AppBarConfiguration.Builder(
                 R.id.nav_notes, R.id.nav_settings)
                 .setOpenableLayout(mDrawerLayout)
                 .build();
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
-        NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
-        NavigationUI.setupWithNavController(navigationView, navController);
+        mNavController = Navigation.findNavController(this, R.id.nav_host_fragment);
+        NavigationUI.setupActionBarWithNavController(this, mNavController, mAppBarConfiguration);
+        NavigationUI.setupWithNavController(navigationView, mNavController);
     }
 
     @Override
     public boolean onSupportNavigateUp() {
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
-        return NavigationUI.navigateUp(navController, mAppBarConfiguration) || super.onSupportNavigateUp();
+        return NavigationUI.navigateUp(mNavController, mAppBarConfiguration) || super.onSupportNavigateUp();
     }
 
     @Override
@@ -54,19 +52,15 @@ public class MainActivity extends AppCompatActivity {
         if (mDrawerLayout.isOpen()) {
             mDrawerLayout.close();
         } else {
-            boolean isLandscape = getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
-            int view = isLandscape ? MainNoteFragment.NOTE_VIEW : MainNoteFragment.NOTE_LIST_VIEW;
-            FragmentManager fragmentManager = getSupportFragmentManager();
-            Fragment noteListFragment = fragmentManager.findFragmentByTag(MainNoteFragment.TAG_NOTES_LIST);
+            final FragmentManager fragmentManager = getSupportFragmentManager();
+            final Fragment noteListFragment = fragmentManager.findFragmentByTag(MainNoteFragment.TAG_NOTES_LIST);
             if (noteListFragment != null && noteListFragment.isVisible()) {
                 checkExit();
             } else {
                 mIsBackShown = false;
                 super.onBackPressed();
             }
-            Bundle result = new Bundle();
-            result.putInt(KEY_BUTTONS_VIEW, view);
-            getSupportFragmentManager().setFragmentResult(MainNoteFragment.KEY_REQUEST_BACK_PRESSED, result);
+            fragmentManager.setFragmentResult(MainNoteFragment.KEY_REQUEST_BACK_PRESSED, new Bundle());
             mLastTimePressed = System.currentTimeMillis();
         }
     }

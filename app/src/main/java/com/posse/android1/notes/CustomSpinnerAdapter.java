@@ -18,7 +18,7 @@ import java.util.ArrayList;
 
 public class CustomSpinnerAdapter extends ArrayAdapter<Integer> {
 
-    public static final int PADDING = 5;
+    public static int PADDING;
     private final ArrayList<Integer> mColors;
     private final Context mContext;
     private final int mActionBarSize;
@@ -30,39 +30,40 @@ public class CustomSpinnerAdapter extends ArrayAdapter<Integer> {
         final TypedArray styledAttributes = mContext.getTheme().obtainStyledAttributes(new int[]{android.R.attr.actionBarSize});
         mActionBarSize = (int) styledAttributes.getDimension(0, 0);
         styledAttributes.recycle();
+        PADDING = mActionBarSize / 20;
     }
 
     @Override
     public View getDropDownView(int position, View convertView, @NotNull ViewGroup parent) {
-        View v = getCustomView(position);
+        final View v = getCustomView(position);
         if (position == 0) v.setVisibility(View.GONE);
         return v;
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        View v = getCustomView(position);
+        final View v = getCustomView(position);
         if (position == 0) v.setVisibility(View.GONE);
         return v;
     }
 
     public ImageView getCustomView(int position) {
-        ImageView circle = new ImageView(mContext);
-        GradientDrawable drawable = new GradientDrawable();
+        final ImageView circle = new ImageView(mContext);
+        final GradientDrawable drawable = new GradientDrawable();
         drawable.setShape(GradientDrawable.OVAL);
         drawable.setSize(mActionBarSize - PADDING * 6, mActionBarSize - PADDING * 6);
         int color = mColors.get(position);
         if (color != -1) {
             color = ResourcesCompat.getColor(mContext.getResources(), color, null);
         } else {
-            TypedArray array = mContext.getTheme().obtainStyledAttributes(new int[]{android.R.attr.colorBackgroundFloating});
+            final TypedArray array = mContext.getTheme().obtainStyledAttributes(new int[]{android.R.attr.colorBackgroundFloating});
             color = array.getColor(0, 0xFF00FF);
             array.recycle();
         }
         drawable.setColor(color);
         drawable.setStroke(PADDING, Color.BLACK);
         circle.setImageDrawable(drawable);
-        circle.setPadding(0, PADDING, PADDING * 2, PADDING);
+        circle.setPadding(0, PADDING, PADDING * 3, PADDING);
         return circle;
     }
 }

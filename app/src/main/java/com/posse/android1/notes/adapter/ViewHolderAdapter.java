@@ -1,6 +1,7 @@
 package com.posse.android1.notes.adapter;
 
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
@@ -17,13 +18,17 @@ public class ViewHolderAdapter extends RecyclerView.Adapter<ViewHolder> {
     private final NoteListFragment mFragment;
     private final LayoutInflater mInflater;
     private final NoteSource mDataSource;
+    private final float mHeaderTextSize;
+    private final float mNoteTextSize;
 
     private OnClickListener mOnClickListener;
 
-    public ViewHolderAdapter(NoteListFragment fragment, NoteSource dataSource) {
+    public ViewHolderAdapter(NoteListFragment fragment, NoteSource dataSource, float headerTextSize, float noteTextSize) {
         mFragment = fragment;
         mInflater = fragment.getLayoutInflater();
         mDataSource = dataSource;
+        mHeaderTextSize = headerTextSize;
+        mNoteTextSize = noteTextSize;
     }
 
     public void setOnClickListener(OnClickListener onClickListener) {
@@ -38,8 +43,8 @@ public class ViewHolderAdapter extends RecyclerView.Adapter<ViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Note note = mDataSource.getItemAt(position);
-        holder.fillCard(mFragment, note);
+        final Note note = mDataSource.getItemAt(position);
+        holder.fillCard(mFragment, note, mHeaderTextSize, mNoteTextSize);
         holder.itemView.setOnClickListener((v) -> {
             if (mOnClickListener != null) {
                 mOnClickListener.onItemClick(v, position);
@@ -56,5 +61,9 @@ public class ViewHolderAdapter extends RecyclerView.Adapter<ViewHolder> {
     @Override
     public int getItemCount() {
         return mDataSource.getItemsCount();
+    }
+
+    public interface OnClickListener {
+        void onItemClick(View v, int position);
     }
 }
