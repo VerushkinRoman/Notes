@@ -7,7 +7,7 @@ import java.util.Locale;
 
 public class DateFormatter {
     public static String getCurrentDate() {
-        final SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault());
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault());
         return dateFormat.format(new Date());
     }
 }

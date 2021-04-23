@@ -9,6 +9,8 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
 import com.google.android.material.button.MaterialButton;
@@ -26,8 +28,8 @@ public class DeleteFragment extends DialogFragment {
     }
 
     public static DeleteFragment newInstance(boolean isCurrentNote) {
-        final DeleteFragment fragment = new DeleteFragment();
-        final Bundle args = new Bundle();
+        DeleteFragment fragment = new DeleteFragment();
+        Bundle args = new Bundle();
         args.putBoolean(KEY_DELETE, isCurrentNote);
         fragment.setArguments(args);
         return fragment;
@@ -43,28 +45,29 @@ public class DeleteFragment extends DialogFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        final View view = inflater.inflate(R.layout.fragment_delete, container, false);
-        final TextView dialog = view.findViewById(R.id.dialog_caption);
-        final int textResource = mIsCurrentNote ? R.string.delete_current_confirmation : R.string.delete_confirmation;
+        View view = inflater.inflate(R.layout.fragment_delete, container, false);
+        TextView dialog = view.findViewById(R.id.dialog_caption);
+        int textResource = mIsCurrentNote ? R.string.delete_current_confirmation : R.string.delete_confirmation;
         dialog.setText(textResource);
-        final MaterialButton btnYes = view.findViewById(R.id.confirm_button);
+        MaterialButton btnYes = view.findViewById(R.id.confirm_button);
         btnYes.setOnClickListener(v -> {
             dismiss();
             requireActivity().getSupportFragmentManager().setFragmentResult(MainNoteFragment.KEY_REQUEST_DELETION_CONFIRMATION, new Bundle());
         });
-        final MaterialButton btnNo = view.findViewById(R.id.cancel_button);
+        MaterialButton btnNo = view.findViewById(R.id.cancel_button);
         btnNo.setOnClickListener(v -> dismiss());
         setCancelable(false);
         return view;
     }
 
     @Override
-    public void onResume() {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
         try {
-            final Window dialogWindow = Objects.requireNonNull(getDialog()).getWindow();
+            Window dialogWindow = Objects.requireNonNull(getDialog()).getWindow();
             int width = ViewGroup.LayoutParams.MATCH_PARENT;
             if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                final DisplayMetrics displayMetrics = new DisplayMetrics();
+                DisplayMetrics displayMetrics = new DisplayMetrics();
                 requireActivity().getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
                 //noinspection SuspiciousNameCombination
                 width = displayMetrics.heightPixels;
@@ -73,6 +76,5 @@ public class DeleteFragment extends DialogFragment {
             dialogWindow.setBackgroundDrawableResource(android.R.color.transparent);
         } catch (Exception ignored) {
         }
-        super.onResume();
     }
 }

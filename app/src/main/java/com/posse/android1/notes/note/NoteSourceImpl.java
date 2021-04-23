@@ -14,8 +14,8 @@ public class NoteSourceImpl implements NoteSource {
     private final LinkedList<Note> mData = new LinkedList<>();
 
     public NoteSourceImpl(Context resources) {
-        final PreferencesDataWorker prefsData = new PreferencesDataWorker(resources);
-        final int notes = prefsData.getNotesQuantity();
+        PreferencesDataWorker prefsData = new PreferencesDataWorker(resources);
+        int notes = prefsData.getNotesQuantity();
         for (int i = 0; i < notes; i++) {
             mData.add(prefsData.readNote(i));
         }

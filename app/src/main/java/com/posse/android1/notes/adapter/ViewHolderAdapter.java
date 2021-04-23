@@ -43,7 +43,7 @@ public class ViewHolderAdapter extends RecyclerView.Adapter<ViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        final Note note = mDataSource.getItemAt(position);
+        Note note = mDataSource.getItemAt(position);
         holder.fillCard(mFragment, note, mHeaderTextSize, mNoteTextSize);
         holder.itemView.setOnClickListener((v) -> {
             if (mOnClickListener != null) {

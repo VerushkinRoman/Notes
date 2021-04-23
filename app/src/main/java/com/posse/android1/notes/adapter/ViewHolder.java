@@ -40,7 +40,7 @@ class ViewHolder extends RecyclerView.ViewHolder {
                 (int) (fragment.getResources().getDimension(R.dimen.max_header_size)
                         / fragment.getResources().getDisplayMetrics().scaledDensity),
                 2, TypedValue.COMPLEX_UNIT_PX);
-        final String[] caption = note.getName().split("\\R", 2);
+        String[] caption = note.getName().split("\\R", 2);
         mHeader.setText(caption[0]);
         mDescription.setText(note.getDescription());
         mDescription.setTextSize(noteSize);
@@ -49,7 +49,7 @@ class ViewHolder extends RecyclerView.ViewHolder {
         if (color != -1) {
             color = ResourcesCompat.getColor(fragment.getResources(), color, null);
         } else {
-            final TypedArray array = fragment.requireActivity().getTheme().obtainStyledAttributes(new int[]{android.R.attr.colorBackgroundFloating});
+            TypedArray array = fragment.requireActivity().getTheme().obtainStyledAttributes(new int[]{android.R.attr.colorBackgroundFloating});
             color = array.getColor(0, 0xFF00FF);
             array.recycle();
         }

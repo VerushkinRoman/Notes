@@ -1,71 +1,101 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context=".ui.settings.SettingsFragment">
+    android:fadeScrollbars="false"
+    android:scrollbarSize="5dp"
+    android:scrollbarStyle="insideInset"
+    android:scrollbars="vertical">
 
-    <androidx.cardview.widget.CardView
-        style="@style/CardStyle"
+    <androidx.appcompat.widget.LinearLayoutCompat
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        tools:context=".ui.settings.SettingsFragment">
 
-        <androidx.appcompat.widget.LinearLayoutCompat
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+        <androidx.cardview.widget.CardView
+            android:id="@+id/settings_card_header"
+            style="@style/CardStyle">
 
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/settings_header_caption"
+            <androidx.appcompat.widget.LinearLayoutCompat
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:maxLines="2"
-                android:text="@string/settings_header_text_size"
-                android:textAlignment="gravity"
-                android:textSize="@dimen/header_text_size" />
+                android:orientation="vertical">
 
-            <com.google.android.material.slider.Slider
-                android:id="@+id/settings_header_size_slider"
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/settings_header_caption"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:maxLines="2"
+                    android:text="@string/settings_header_text_size"
+                    android:textAlignment="gravity"
+                    android:textSize="@dimen/header_text_size" />
+
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/settings_header_size_slider"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:stepSize="2"
+                    android:value="28"
+                    android:valueFrom="12"
+                    android:valueTo="40" />
+            </androidx.appcompat.widget.LinearLayoutCompat>
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/settings_card_note"
+            style="@style/CardStyle">
+
+            <androidx.appcompat.widget.LinearLayoutCompat
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:stepSize="2"
-                android:value="28"
-                android:valueFrom="12"
-                android:valueTo="40" />
-        </androidx.appcompat.widget.LinearLayoutCompat>
-    </androidx.cardview.widget.CardView>
+                android:orientation="vertical">
 
-    <androidx.cardview.widget.CardView
-        style="@style/CardStyle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/settings_note_caption"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:maxLines="2"
+                    android:text="@string/settings_note_text_size"
+                    android:textAlignment="gravity"
+                    android:textSize="@dimen/note_text_size" />
 
-        <androidx.appcompat.widget.LinearLayoutCompat
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/settings_note_size_slider"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:stepSize="2"
+                    android:value="16"
+                    android:valueFrom="12"
+                    android:valueTo="30" />
+            </androidx.appcompat.widget.LinearLayoutCompat>
+        </androidx.cardview.widget.CardView>
 
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/settings_note_caption"
+        <androidx.cardview.widget.CardView
+            android:id="@+id/settings_card_color"
+            style="@style/CardStyle">
+
+            <androidx.appcompat.widget.LinearLayoutCompat
+                android:id="@+id/settings_color"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:maxLines="2"
-                android:text="@string/settings_note_text_size"
-                android:textAlignment="gravity"
-                android:textSize="@dimen/note_text_size" />
+                android:orientation="vertical">
 
-            <com.google.android.material.slider.Slider
-                android:id="@+id/settings_note_size_slider"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:stepSize="2"
-                android:value="16"
-                android:valueFrom="12"
-                android:valueTo="30" />
-        </androidx.appcompat.widget.LinearLayoutCompat>
-    </androidx.cardview.widget.CardView>
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/settings_color_caption"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp"
+                    android:gravity="center"
+                    android:maxLines="2"
+                    android:text="@string/settings_default_color"
+                    android:textAlignment="gravity"
+                    android:textSize="@dimen/note_text_size" />
 
-</androidx.appcompat.widget.LinearLayoutCompat>
+            </androidx.appcompat.widget.LinearLayoutCompat>
+        </androidx.cardview.widget.CardView>
+    </androidx.appcompat.widget.LinearLayoutCompat>
+</androidx.core.widget.NestedScrollView>

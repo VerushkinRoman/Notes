@@ -27,4 +27,5 @@
     <string name="spinner">Color</string>
     <string name="settings_header_text_size">Header text size</string>
     <string name="settings_note_text_size">Note text size</string>
+    <string name="settings_default_color">Default color for new Note</string>
 </resources>

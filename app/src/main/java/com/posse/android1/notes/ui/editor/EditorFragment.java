@@ -40,6 +40,7 @@ public class EditorFragment extends DialogFragment {
     private static final String KEY_HEADER_SIZE = EditorFragment.class.getCanonicalName() + "_mHeaderTextSize";
     private static final String KEY_NOTE_SIZE = EditorFragment.class.getCanonicalName() + "_mNoteTextSize";
     private static final String KEY_TEXT = EditorFragment.class.getCanonicalName() + "_text";
+    private static final String KEY_COLOR = EditorFragment.class.getCanonicalName() + "_mDefaultColor";
     private static final String KEY_OPENED_KEYBOARD = EditorFragment.class.getCanonicalName() + "_mIsKeyboardOpened";
     private InputMethodManager mInputMethodManager;
     private int mCurrentNoteIndex = -1;
@@ -49,6 +50,7 @@ public class EditorFragment extends DialogFragment {
     private String mNoteHeader;
     private String mNoteBody;
     private int mMaxNoteIndex;
+    private int mDefaultColor;
     private boolean mIsBodyFocused;
     private boolean mIsHeadFocused;
     private float mHeaderTextSize;
@@ -58,11 +60,12 @@ public class EditorFragment extends DialogFragment {
     public EditorFragment() {
     }
 
-    public static EditorFragment newInstance(int currentNoteIndex, int maxNoteIndex, float headerTextSize, float noteTextSize) {
-        final EditorFragment fragment = new EditorFragment();
-        final Bundle args = new Bundle();
+    public static EditorFragment newInstance(int currentNoteIndex, int maxNoteIndex, float headerTextSize, float noteTextSize, int color) {
+        EditorFragment fragment = new EditorFragment();
+        Bundle args = new Bundle();
         args.putInt(KEY_NOTE_INDEX, currentNoteIndex);
         args.putInt(KEY_MAX_NOTE_INDEX, maxNoteIndex);
+        args.putInt(KEY_COLOR, color);
         args.putFloat(KEY_HEADER_SIZE, headerTextSize);
         args.putFloat(KEY_NOTE_SIZE, noteTextSize);
         fragment.setArguments(args);
@@ -77,11 +80,12 @@ public class EditorFragment extends DialogFragment {
             mMaxNoteIndex = getArguments().getInt(KEY_MAX_NOTE_INDEX);
             mHeaderTextSize = getArguments().getFloat(KEY_HEADER_SIZE);
             mNoteTextSize = getArguments().getFloat(KEY_NOTE_SIZE);
+            mDefaultColor = getArguments().getInt(KEY_COLOR);
         }
         if (mCurrentNoteIndex == -1) {
             mNote = new Note(mMaxNoteIndex, "", "", DateFormatter.getCurrentDate(), -1);
         } else {
-            final NoteSource noteSource = NoteSourceImpl.getInstance(requireActivity());
+            NoteSource noteSource = NoteSourceImpl.getInstance(requireActivity());
             mNote = noteSource.getItemAt(mCurrentNoteIndex);
         }
         if (savedInstanceState != null) {
@@ -94,7 +98,7 @@ public class EditorFragment extends DialogFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        final View view = inflater.inflate(R.layout.fragment_editor, container, false);
+        View view = inflater.inflate(R.layout.fragment_editor, container, false);
         mEditNoteHeader = view.findViewById(R.id.note_heading);
         mEditNoteBody = view.findViewById(R.id.note_body);
         if (savedInstanceState == null) {
@@ -105,7 +109,7 @@ public class EditorFragment extends DialogFragment {
         mEditNoteHeader.setTextSize(mHeaderTextSize);
         mEditNoteBody.setText(mNoteBody);
         mEditNoteBody.setTextSize(mNoteTextSize);
-        final Button btnSave = view.findViewById(R.id.btn_save);
+        Button btnSave = view.findViewById(R.id.btn_save);
         btnSave.setOnClickListener((v) -> {
             mInputMethodManager.hideSoftInputFromWindow(v.getWindowToken(), 0);
             dismiss();
@@ -124,7 +128,8 @@ public class EditorFragment extends DialogFragment {
 
     private void setBackgroundColor(@NonNull View view) {
         int color = mNote.getColor();
-        final CardView card = view.findViewById(R.id.card_editor);
+        CardView card = view.findViewById(R.id.card_editor);
+        if (mCurrentNoteIndex == -1) color = mDefaultColor;
         if (color != -1) {
             color = ResourcesCompat.getColor(getResources(), color, null);
         } else {
@@ -136,12 +141,12 @@ public class EditorFragment extends DialogFragment {
     }
 
     private void setWindowSize() {
-        final Window dialogWindow = Objects.requireNonNull(getDialog()).getWindow();
-        final WindowManager.LayoutParams params = dialogWindow.getAttributes();
-        final boolean isLandscape = getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
+        Window dialogWindow = Objects.requireNonNull(getDialog()).getWindow();
+        WindowManager.LayoutParams params = dialogWindow.getAttributes();
+        boolean isLandscape = getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
         int height = WindowManager.LayoutParams.MATCH_PARENT;
         if (!isLandscape) {
-            final DisplayMetrics displayMetrics = new DisplayMetrics();
+            DisplayMetrics displayMetrics = new DisplayMetrics();
             requireActivity().getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
             height = displayMetrics.heightPixels / 2;
         }
@@ -154,12 +159,12 @@ public class EditorFragment extends DialogFragment {
     }
 
     private void showKeyboard() {
-        final View rootView = requireActivity().getWindow().getDecorView().getRootView();
+        View rootView = requireActivity().getWindow().getDecorView().getRootView();
         rootView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
-            final Rect r = new Rect();
+            Rect r = new Rect();
             rootView.getWindowVisibleDisplayFrame(r);
-            final int screenHeight = rootView.getHeight();
-            final int keypadHeight = screenHeight - r.bottom;
+            int screenHeight = rootView.getHeight();
+            int keypadHeight = screenHeight - r.bottom;
             if (!mIsKeyboardOpened) mIsKeyboardOpened = keypadHeight > screenHeight * 0.2;
         });
         if (!mIsKeyboardOpened)
@@ -170,7 +175,8 @@ public class EditorFragment extends DialogFragment {
         mNote.setName(Objects.requireNonNull(mEditNoteHeader.getText()).toString());
         mNote.setDescription(Objects.requireNonNull(mEditNoteBody.getText()).toString());
         mNote.setCreationDate(DateFormatter.getCurrentDate());
-        final Bundle result = new Bundle();
+        if (mCurrentNoteIndex == -1) mNote.setColor(mDefaultColor);
+        Bundle result = new Bundle();
         result.putBoolean(KEY_PAUSED, isPaused);
         if (isPaused) result.putParcelable(KEY_NOTE, mNote);
         requireActivity().getSupportFragmentManager().setFragmentResult(MainNoteFragment.KEY_REQUEST_NOTE_TO_SAVE, result);

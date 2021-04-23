@@ -29,10 +29,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        final Toolbar toolbar = findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         mDrawerLayout = findViewById(R.id.drawer_layout);
-        final NavigationView navigationView = findViewById(R.id.nav_view);
+        NavigationView navigationView = findViewById(R.id.nav_view);
         mAppBarConfiguration = new AppBarConfiguration.Builder(
                 R.id.nav_notes, R.id.nav_settings)
                 .setOpenableLayout(mDrawerLayout)
@@ -52,8 +52,8 @@ public class MainActivity extends AppCompatActivity {
         if (mDrawerLayout.isOpen()) {
             mDrawerLayout.close();
         } else {
-            final FragmentManager fragmentManager = getSupportFragmentManager();
-            final Fragment noteListFragment = fragmentManager.findFragmentByTag(MainNoteFragment.TAG_NOTES_LIST);
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            Fragment noteListFragment = fragmentManager.findFragmentByTag(MainNoteFragment.TAG_NOTES_LIST);
             if (noteListFragment != null && noteListFragment.isVisible()) {
                 checkExit();
             } else {
