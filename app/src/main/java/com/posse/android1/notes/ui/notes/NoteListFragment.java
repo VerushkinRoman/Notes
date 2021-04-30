@@ -14,8 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.posse.android1.notes.R;
-import com.posse.android1.notes.adapter.ViewHolderAdapter;
-import com.posse.android1.notes.note.NoteSourceImpl;
+import com.posse.android1.notes.viewHolder.ViewHolderAdapter;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -78,7 +77,8 @@ public class NoteListFragment extends Fragment {
                 new GridLayoutManager(requireActivity(), 2) : new LinearLayoutManager(requireActivity());
         mRecyclerView.setLayoutManager(layoutManager);
 
-        mViewHolderAdapter = new ViewHolderAdapter(this, NoteSourceImpl.getInstance(requireActivity()), mHeaderTextSize, mNoteTextSize);
+        mViewHolderAdapter = new ViewHolderAdapter(this, mHeaderTextSize, mNoteTextSize);
+//        mViewHolderAdapter = new ViewHolderAdapter(this, NoteSourceFirestoreImpl.getInstance(requireActivity()), mHeaderTextSize, mNoteTextSize);
         mViewHolderAdapter.setOnClickListener((v, position) -> {
             Bundle result = new Bundle();
             result.putInt(KEY_POSITION_CLICKED, position);

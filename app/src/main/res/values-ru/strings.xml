@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Заметки</string>
-    <string name="nav_header_title">Posse</string>
-    <string name="nav_header_subtitle">79206111373@yandex.ru</string>
+    <string name="nav_header_login_button">Войти</string>
     <string name="action_switch_view">Переключатель вида</string>
 
     <string name="menu_notes">Заметки</string>
@@ -28,4 +27,5 @@
     <string name="settings_header_text_size">Размер текста заголовка</string>
     <string name="settings_note_text_size">Размер текста заметки</string>
     <string name="settings_default_color">Цвет по умолчанию для новых Заметок</string>
+    <string name="nav_header_logout_button">Выйти</string>
 </resources>

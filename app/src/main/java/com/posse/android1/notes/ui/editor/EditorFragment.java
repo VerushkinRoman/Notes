@@ -24,9 +24,9 @@ import androidx.fragment.app.DialogFragment;
 import com.google.android.material.textfield.TextInputEditText;
 import com.posse.android1.notes.DateFormatter;
 import com.posse.android1.notes.R;
+import com.posse.android1.notes.firebase.NoteSource;
+import com.posse.android1.notes.firebase.NoteSourceFirestoreImpl;
 import com.posse.android1.notes.note.Note;
-import com.posse.android1.notes.note.NoteSource;
-import com.posse.android1.notes.note.NoteSourceImpl;
 import com.posse.android1.notes.ui.notes.MainNoteFragment;
 
 import java.util.Objects;
@@ -35,12 +35,13 @@ public class EditorFragment extends DialogFragment {
     public static final String KEY_NOTE = EditorFragment.class.getCanonicalName() + "_currentNote";
     public static final String KEY_PAUSED = EditorFragment.class.getCanonicalName() + "_isPaused";
     private static final String KEY_NOTE_INDEX = EditorFragment.class.getCanonicalName() + "_currentNoteIndex";
-    private static final String KEY_MAX_NOTE_INDEX = EditorFragment.class.getCanonicalName() + "_maxNoteIndex";
+    //    private static final String KEY_MAX_NOTE_INDEX = EditorFragment.class.getCanonicalName() + "_maxNoteIndex";
     private static final String KEY_HEADER_TEXT = EditorFragment.class.getCanonicalName() + "_headerText";
     private static final String KEY_HEADER_SIZE = EditorFragment.class.getCanonicalName() + "_mHeaderTextSize";
     private static final String KEY_NOTE_SIZE = EditorFragment.class.getCanonicalName() + "_mNoteTextSize";
     private static final String KEY_TEXT = EditorFragment.class.getCanonicalName() + "_text";
     private static final String KEY_COLOR = EditorFragment.class.getCanonicalName() + "_mDefaultColor";
+    private static final String KEY_AUTHOR = EditorFragment.class.getCanonicalName() + "_mAuthor";
     private static final String KEY_OPENED_KEYBOARD = EditorFragment.class.getCanonicalName() + "_mIsKeyboardOpened";
     private InputMethodManager mInputMethodManager;
     private int mCurrentNoteIndex = -1;
@@ -49,8 +50,9 @@ public class EditorFragment extends DialogFragment {
     private TextInputEditText mEditNoteBody;
     private String mNoteHeader;
     private String mNoteBody;
-    private int mMaxNoteIndex;
+    //    private int mMaxNoteIndex;
     private int mDefaultColor;
+    private String mAuthor;
     private boolean mIsBodyFocused;
     private boolean mIsHeadFocused;
     private float mHeaderTextSize;
@@ -60,14 +62,16 @@ public class EditorFragment extends DialogFragment {
     public EditorFragment() {
     }
 
-    public static EditorFragment newInstance(int currentNoteIndex, int maxNoteIndex, float headerTextSize, float noteTextSize, int color) {
+    public static EditorFragment newInstance(int currentNoteIndex, float headerTextSize, float noteTextSize, int color, String author) {
+//    public static EditorFragment newInstance(int currentNoteIndex, int maxNoteIndex, float headerTextSize, float noteTextSize, int color, String author) {
         EditorFragment fragment = new EditorFragment();
         Bundle args = new Bundle();
         args.putInt(KEY_NOTE_INDEX, currentNoteIndex);
-        args.putInt(KEY_MAX_NOTE_INDEX, maxNoteIndex);
+//        args.putInt(KEY_MAX_NOTE_INDEX, maxNoteIndex);
         args.putInt(KEY_COLOR, color);
         args.putFloat(KEY_HEADER_SIZE, headerTextSize);
         args.putFloat(KEY_NOTE_SIZE, noteTextSize);
+        args.putString(KEY_AUTHOR, author);
         fragment.setArguments(args);
         return fragment;
     }
@@ -77,15 +81,17 @@ public class EditorFragment extends DialogFragment {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             mCurrentNoteIndex = getArguments().getInt(KEY_NOTE_INDEX);
-            mMaxNoteIndex = getArguments().getInt(KEY_MAX_NOTE_INDEX);
+//            mMaxNoteIndex = getArguments().getInt(KEY_MAX_NOTE_INDEX);
             mHeaderTextSize = getArguments().getFloat(KEY_HEADER_SIZE);
             mNoteTextSize = getArguments().getFloat(KEY_NOTE_SIZE);
             mDefaultColor = getArguments().getInt(KEY_COLOR);
+            mAuthor = getArguments().getString(KEY_AUTHOR);
         }
         if (mCurrentNoteIndex == -1) {
-            mNote = new Note(mMaxNoteIndex, "", "", DateFormatter.getCurrentDate(), -1);
+            mNote = new Note(System.currentTimeMillis(), "", "", DateFormatter.getCurrentDate(), -1, mAuthor);
         } else {
-            NoteSource noteSource = NoteSourceImpl.getInstance(requireActivity());
+            NoteSource noteSource = NoteSourceFirestoreImpl.getInstance();
+//            NoteSource noteSource = NoteSourceFirestoreImpl.getInstance(requireActivity());
             mNote = noteSource.getItemAt(mCurrentNoteIndex);
         }
         if (savedInstanceState != null) {

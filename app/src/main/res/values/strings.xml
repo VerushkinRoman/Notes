@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Notes</string>
-    <string name="nav_header_title">Posse</string>
-    <string name="nav_header_subtitle">79206111373@yandex.ru</string>
+    <string name="nav_header_login_button">Login</string>
+    <string name="nav_header_subtitle" translatable="false">e-mail</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_switch_view">Switch View</string>
 
@@ -28,4 +28,5 @@
     <string name="settings_header_text_size">Header text size</string>
     <string name="settings_note_text_size">Note text size</string>
     <string name="settings_default_color">Default color for new Note</string>
+    <string name="nav_header_logout_button">Logout</string>
 </resources>

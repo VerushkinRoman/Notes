@@ -3,6 +3,8 @@ package com.posse.android1.notes.note;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import androidx.annotation.Nullable;
+
 public class Note implements Parcelable {
     public static final Creator<Note> CREATOR = new Creator<Note>() {
         @Override
@@ -15,24 +17,28 @@ public class Note implements Parcelable {
             return new Note[size];
         }
     };
-
-    private int mNoteIndex;
+    @Nullable
+    private String mId;
+    private long mNoteIndex;
     private String mName;
     private String mDescription;
     private String mCreationDate;
     private boolean mIsDeleteVisible;
     private int mColor;
+    private String mAuthor;
 
-    public Note(int noteIndex, String name, String description, String creationDate, int color) {
+    public Note(long noteIndex, String name, String description, String creationDate, int color, String author) {
         mNoteIndex = noteIndex;
         mName = name;
         mDescription = description;
         mCreationDate = creationDate;
         mColor = color;
+        mAuthor = author;
     }
 
     protected Note(Parcel in) {
-        mNoteIndex = in.readInt();
+        mId = in.readString();
+        mNoteIndex = in.readLong();
         mName = in.readString();
         mDescription = in.readString();
         mCreationDate = in.readString();
@@ -40,7 +46,23 @@ public class Note implements Parcelable {
         mColor = in.readInt();
     }
 
-    public int getNoteIndex() {
+    public String getAuthor() {
+        return mAuthor;
+    }
+
+    public void setAuthor(String author) {
+        mAuthor = author;
+    }
+
+    public String getId() {
+        return mId;
+    }
+
+    public void setId(@Nullable String id) {
+        mId = id;
+    }
+
+    public long getNoteIndex() {
         return mNoteIndex;
     }
 
@@ -95,7 +117,8 @@ public class Note implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeInt(mNoteIndex);
+        dest.writeString(mId);
+        dest.writeLong(mNoteIndex);
         dest.writeString(mName);
         dest.writeString(mDescription);
         dest.writeString(mCreationDate);
